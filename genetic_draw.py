@@ -43,11 +43,20 @@ curses.init_extended_pair(2, 2, 3)
 
 # curses.printw("asdf")
 curses.printw("asdf\n".encode('utf-8'))
-curses.printw("asdf\n".encode('utf-8'))
+
+
+curses.curses_version.restype = ctypes.c_char_p
+
+ver = curses.curses_version()
+ver = ver.decode('utf-8')
+
+curses.printw(ver.split(' ')[1].encode('utf-8'))
 
 y, x = getmaxyx(win)
 
-curses.printw(('[' + str(y) + ' ' + str(x) + ']').encode('utf-8'))
+curses.printw(('\n[' + str(y) + ' ' + str(x) + ']').encode('utf-8'))
+
+
 
 curses.attron(COLOR_PAIR(2))
 curses.mvprintw(3, 1, "jkl".encode('utf-8'))

@@ -1,69 +1,42 @@
 #!/usr/bin/env python3
 
-import time
-import ctypes
-from ctypes import cdll
-
-#
-# Definitions from curses.h
-#
-
-NCURSES_ATTR_SHIFT = 8
+import numpy as np
 
 
-def NCURSES_BITS(mask, shift):
-    return mask << (shift + NCURSES_ATTR_SHIFT)
+STEPS = 1000
+SPEC_CNT = 100
+
+WIDTH = 100
+HEIGHT = 100
 
 
-A_COLOR = NCURSES_BITS((1 << 8) - 1, 0)
+def mutate():
+    pass
 
 
-def COLOR_PAIR(n):
-    return NCURSES_BITS(n, 0) & A_COLOR
+def score():
+    pass
 
 
-#define getmaxyx(win,y,x)   (y = getmaxy(win), x = getmaxx(win))
-def getmaxyx(win):
-   y = curses.getmaxy(win)
-   x = curses.getmaxx(win)
-   return y, x
-
-# https://docs.python.org/2.5/lib/ctypes-loading-dynamic-link-libraries.html
-curses = ctypes.CDLL('libncursesw.so.6.1')
-# curses = ctypes.CDLL('libncurses.so.5')
-
-# http://www.tldp.org/HOWTO/NCURSES-Programming-HOWTO/
-win = curses.initscr()
-curses.start_color()
-
-curses.init_extended_color(2, 999, 0, 0)
-curses.init_extended_color(3, 0, 999, 0)
-
-curses.init_extended_pair(2, 2, 3)
-
-# curses.printw("asdf")
-curses.printw("asdf\n".encode('utf-8'))
+def corss():
+    pass
 
 
-curses.curses_version.restype = ctypes.c_char_p
-
-ver = curses.curses_version()
-ver = ver.decode('utf-8')
-
-curses.printw(ver.split(' ')[1].encode('utf-8'))
-
-y, x = getmaxyx(win)
-
-curses.printw(('\n[' + str(y) + ' ' + str(x) + ']').encode('utf-8'))
+def dna_to_img():
+    pass
 
 
+def main():
 
-curses.attron(COLOR_PAIR(2))
-curses.mvprintw(3, 1, "jkl".encode('utf-8'))
-curses.attroff(COLOR_PAIR(2))
+    for step in range(1000):
+        print("Generation:", step)
 
-curses.refresh()
+        mutate()
 
-curses.getch()
+        score()
 
-curses.endwin()
+        corss()
+
+
+if __name__ == '__main__':
+    main()

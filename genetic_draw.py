@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
 from PIL import Image, ImageDraw, ImageFont
-import numpy as np
 
 
-STEPS = 1000
+STEPS = 1
 SPEC_CNT = 100
 
-WIDTH = 100
-HEIGHT = 100
+WIDTH = 400
+HEIGHT = 400
 
 BLACK = 0
 WHITE = 255
@@ -19,6 +18,7 @@ FONT_SIZE = 17
 
 
 def mutate():
+    dna_to_img()
     pass
 
 
@@ -31,12 +31,14 @@ def corss():
 
 
 def dna_to_img():
-    pil_img = Image.new('RGB', color=BLACK, size=(WIDTH, HEIGHT))
-    draw = ImageDraw.Draw(pil_img)
+    img = Image.new("L", color=BLACK, size=(WIDTH, HEIGHT))
+    draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(FONT_NAME, size=FONT_SIZE)
 
+    text = "to jest tekst\n   i trzy spacje"
+
     draw.text(xy=(0, 0), text=text, font=font, fill=WHITE)
-    terminal_img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+    img.save("out.png")
 
 
 def main():

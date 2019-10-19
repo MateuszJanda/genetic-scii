@@ -21,7 +21,7 @@ FONT_SPACING = 2
 
 class Char:
     def __init__(self):
-        self.foreground = BLACK
+        self.foreground = WHITE
         self.background = BLACK
         self.symbol = "a"
 
@@ -64,9 +64,9 @@ def dna_to_img(dna, char_width, char_height):
 
     for y, line in enumerate(dna):
         for x, char in enumerate(line):
-            draw.text(xy=(x*char_width, y*char_height), text=char.symbol, fill=WHITE, font=font, spacing=FONT_SPACING)
-
-    # draw.text(xy=(0, 0), text="text", fill=WHITE, font=font, spacing=FONT_SPACING)
+            pos_x, pos_y = x*char_width, y*char_height
+            draw.rectangle(xy=[(pos_x, pos_y), (pos_x + char_width, pos_y + char_height)], fill=char.background)
+            draw.text(xy=(pos_x, pos_y), text=char.symbol, fill=char.foreground, font=font, spacing=FONT_SPACING)
 
     return img
 

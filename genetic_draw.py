@@ -7,8 +7,8 @@ from PIL import Image, ImageDraw, ImageFont
 STEPS = 1
 SPEC_CNT = 100
 
-WIDTH = 400
-HEIGHT = 400
+IMG_WIDTH = 400
+IMG_HEIGHT = 400
 
 BLACK = 0
 WHITE = 255
@@ -19,14 +19,67 @@ FONT_SIZE = 16
 FONT_SPACING = 2
 
 
-def mutate(dna):
-    # dna_to_img()
-    x = random.randint(0, WIDTH//FONT_SIZE//2 - 1)
-    y = random.randint(0, HEIGHT//FONT_SIZE - 1)
-    width = random.randint(1, WIDTH//FONT_SIZE//2 - x)
+class Char:
+    def __init__(self):
+        self.foreground = BLACK
+        self.background = BLACK
+        self.symbol = "a"
+
+
+def main():
+    char_width, char_height = singe_char_size()
+    dna = basic_dna(char_width, char_height)
+
+    for step in range(STEPS):
+        print("Generation:", step)
+
+        mutate(dna, char_width, char_height)
+
+        score()
+
+        corss()
+
+
+def singe_char_size():
+    img = Image.new("L", color=BLACK, size=(IMG_WIDTH, IMG_HEIGHT))
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype(FONT_NAME, size=FONT_SIZE)
+    width, height = draw.textsize(text="a", font=font, spacing=FONT_SPACING)
+
+    return width, height+FONT_SPACING
+
+
+def basic_dna(char_width, char_height):
+    dna = []
+    for _ in range(SPEC_CNT):
+        dna.append([[Char() for _ in range(IMG_WIDTH//char_width)] for _ in range(IMG_HEIGHT//char_height)])
+
+    return dna
+
+
+def dna_to_img(dna, char_width, char_height):
+    img = Image.new("L", color=BLACK, size=(IMG_WIDTH, IMG_HEIGHT))
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype(FONT_NAME, size=FONT_SIZE)
+
+    for y, line in enumerate(dna):
+        for x, char in enumerate(line):
+            draw.text(xy=(x*char_width, y*char_height), text=char.symbol, fill=WHITE, font=font, spacing=FONT_SPACING)
+
+    # draw.text(xy=(0, 0), text="text", fill=WHITE, font=font, spacing=FONT_SPACING)
+
+    return img
+
+
+def mutate(dna, char_width, char_height):
+    x = random.randint(0, IMG_WIDTH//char_width - 1)
+    y = random.randint(0, IMG_HEIGHT//char_height - 1)
+    width = random.randint(1, IMG_WIDTH//char_width - x)
+    height = random.randint(1, IMG_HEIGHT//char_height - y)
     char = random.choice('abcd')
 
-    dna_to_img()
+    img = dna_to_img(dna[0], char_width, char_height)
+    img.save("out.png")
 
 
 def score():
@@ -35,50 +88,6 @@ def score():
 
 def corss():
     pass
-
-
-def dna_to_img():
-    img = Image.new("L", color=BLACK, size=(WIDTH, HEIGHT))
-    draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype(FONT_NAME, size=FONT_SIZE)
-
-    text = "to jest tekst\n   i trzy spacje"
-    text = "this text is to looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong"
-
-    # print(font.getsize("a"))
-    print(draw.textsize("a", font))
-    print(draw.textsize("asdf\nasdf", font))
-    print(font.path)
-    # print(draw.multiline_textsize("asdf\nasdf", font))
-
-    # draw.text(xy=(0, 0), text=text, font=font, fill=WHITE)
-
-    # default spacing 4
-
-    draw.text(xy=(0, 0), text="╣ ╠╣ ░ ▅\n╣ ╣ ░ ▅\ncommand not found", fill=WHITE, font=font, spacing=FONT_SPACING)
-    # draw.text(xy=(0, 15+4), text="asdf", font=font, fill=WHITE)
-    # draw.text((0,0), text="asdf\nasdf", font=font, fill=WHITE)
-    # draw.text(xy=(0, 0), text="xxx\njkl", font=font, fill=WHITE)
-
-    # draw.multiline_text((0,0), text="asdf\nasdf", font=font, fill=WHITE)
-
-    img.save("out.png")
-
-
-def main():
-    dna = []
-    for _ in range(SPEC_CNT):
-        dna.append([" " for _ in range(WIDTH//FONT_SIZE//2)] for _ in range(HEIGHT//FONT_SIZE))
-
-
-    for step in range(STEPS):
-        print("Generation:", step)
-
-        mutate(dna)
-
-        score()
-
-        corss()
 
 
 if __name__ == '__main__':

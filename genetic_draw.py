@@ -20,10 +20,10 @@ FONT_SPACING = 2
 
 
 class Char:
-    def __init__(self):
-        self.foreground = WHITE
-        self.background = BLACK
-        self.symbol = "a"
+    def __init__(self, symbol=" ", foreground=WHITE, background=BLACK):
+        self.symbol = symbol
+        self.foreground = foreground
+        self.background = background
 
 
 def main():
@@ -71,15 +71,29 @@ def dna_to_img(dna, char_width, char_height):
     return img
 
 
+def dump_dna(dna):
+    for line in dna:
+        print("".join([ch.symbol for ch in line]))
+
+
 def mutate(dna, char_width, char_height):
     x = random.randint(0, IMG_WIDTH//char_width - 1)
     y = random.randint(0, IMG_HEIGHT//char_height - 1)
-    width = random.randint(1, IMG_WIDTH//char_width - x)
-    height = random.randint(1, IMG_HEIGHT//char_height - y)
-    char = random.choice('abcd')
+    end_x = random.randint(x + 1, IMG_WIDTH//char_width)
+    end_y = random.randint(y + 1, IMG_HEIGHT//char_height)
+
+    foreground = random.randint(0, 255)
+    background = random.randint(0, 255)
+    symbol = random.choice('abcd')
+
+    for row in range(y, end_y):
+        for col in range(x, end_x):
+            dna[0][row][col] = Char(symbol, foreground, background)
+
+    # dump_dna(dna[0])
 
     img = dna_to_img(dna[0], char_width, char_height)
-    img.save("out.png")
+    # img.save("out.png")
 
 
 def score():

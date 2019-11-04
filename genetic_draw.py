@@ -2,13 +2,14 @@
 
 import random
 import time
+import copy
 import operator
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
 
-STEPS = 10
-POPULATION_NUM = 5
+STEPS = 21
+POPULATION_NUM = 100
 BEST_NUM = 3
 
 BLACK = 0
@@ -20,6 +21,7 @@ FONT_SIZE = 16
 FONT_SPACING = 2
 
 CHAR_BASE_BASIC = 'asdf'
+
 
 class Char:
     def __init__(self, symbol=" ", foreground=WHITE, background=BLACK):
@@ -36,7 +38,7 @@ def main():
     for step in range(STEPS):
         tic = time.time()
 
-        mutate(population, orig_img.shape, char_shape, CHAR_BASE_BASIC)
+        mutate(population, char_shape, CHAR_BASE_BASIC)
         best = scores(population, orig_img, char_shape)
         population = corss(population, best)
         dump_best(population, best, orig_img.shape, char_shape, step)
@@ -56,8 +58,10 @@ def singe_char_shape():
 
 
 def basic_population(img_shape, char_shape):
-    population = np.full(shape=(POPULATION_NUM, img_shape[0]//char_shape[0],
-        img_shape[1]//char_shape[1]), fill_value=Char())
+    img = Image.new("L", color=BLACK, size=(img_shape[1], img_shape[0]))
+    dna = np.full(shape=(img_shape[0]//char_shape[0], img_shape[1]//char_shape[1]), fill_value=Char())
+
+    population = [(np.copy(dna), copy.copy(img)) for _ in range(POPULATION_NUM)]
     return population
 
 
@@ -69,30 +73,39 @@ def get_orig_img(path="orig.png"):
     return np.array(img)
 
 
-def mutate(population, img_shape, char_shape, char_base):
-    for dna in population:
-        x = random.randint(0, img_shape[1]//char_shape[1] - 1)
-        y = random.randint(0, img_shape[0]//char_shape[0] - 1)
-        end_x = random.randint(x + 1, img_shape[1]//char_shape[1])
-        end_y = random.randint(y + 1, img_shape[0]//char_shape[0])
+def mutate(population, char_shape, char_base):
+    font = ImageFont.truetype(FONT_NAME, size=FONT_SIZE)
+
+    for dna, img in population:
+        width, height = img.size
+        begin_x = random.randint(0, width//char_shape[1] - 1)
+        begin_y = random.randint(0, height//char_shape[0] - 1)
+        end_x = random.randint(begin_x + 1, width//char_shape[1])
+        end_y = random.randint(begin_y + 1, height//char_shape[0])
 
         foreground = random.randint(0, 255)
         background = random.randint(0, 255)
         symbol = random.choice(char_base)
 
-        for pos_x in range(x, end_x):
-            for pos_y in range(y, end_y):
-                ch = dna[pos_y, pos_x]
-                f = (ch.foreground + foreground)//2
-                b = (ch.background + background)//2
-                dna[pos_y, pos_x] = Char(symbol, f, b)
+        draw = ImageDraw.Draw(img)
+
+        for x in range(begin_x, end_x):
+            for y in range(begin_y, end_y):
+                char = dna[y, x]
+                f = (char.foreground + foreground)//2
+                b = (char.background + background)//2
+                dna[y, x] = Char(symbol, f, b)
+
+                pos_x, pos_y = x*char_shape[1], y*char_shape[0]
+                draw.rectangle(xy=[(pos_x, pos_y), (pos_x + char_shape[1], pos_y + char_shape[0])], fill=char.background)
+                draw.text(xy=(pos_x, pos_y), text=char.symbol, fill=char.foreground, font=font, spacing=FONT_SPACING)
 
 
 def scores(population, orig_img, char_shape):
     scores = {}
-    for idx, dna in enumerate(population):
-        img = dna_to_img(dna, orig_img.shape, char_shape)
-        result = np.sum(np.abs(orig_img - np.array(img)))
+    for idx, val in enumerate(population):
+        dna, img = val
+        result = np.sum(np.abs(orig_img - img))
         scores[idx] = result
 
     best = sorted(scores.items(), key=operator.itemgetter(1))[:BEST_NUM]
@@ -100,7 +113,7 @@ def scores(population, orig_img, char_shape):
 
 
 def corss(population, best):
-    result = np.array([np.copy(population[idx % BEST_NUM]) for idx in range(population.shape[0])])
+    result = [np.copy(population[idx % BEST_NUM]) for idx in range(len(population))]
     return result
 
 
@@ -127,8 +140,8 @@ def dump_best(population, best, img_shape, char_shape, step):
     if step % 10:
         return
 
-    img = dna_to_img(population[best[0]], img_shape, char_shape)
-    img.save("a" + str(step) + ".png")
+    img = dna_to_img(population[best[0]][0], img_shape, char_shape)
+    img.save("f" + str(step) + ".png")
 
 
 if __name__ == '__main__':

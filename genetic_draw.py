@@ -18,6 +18,7 @@ FONT_NAME = 'DejaVuSansMono'
 FONT_SIZE = 16
 FONT_SPACING = 2
 
+CHAR_BASE_BASIC = 'asdf'
 
 class Char:
     def __init__(self, symbol=" ", foreground=WHITE, background=BLACK):
@@ -34,7 +35,7 @@ def main():
     for step in range(STEPS):
         print("Generation:", step)
 
-        mutate(population, orig_img.shape, char_shape)
+        mutate(population, orig_img.shape, char_shape, CHAR_BASE_BASIC)
         best = scores(population, orig_img, char_shape)
         population = corss(population, best)
         dump_best(population, best, orig_img.shape, char_shape, step)
@@ -65,7 +66,7 @@ def get_orig_img(path="orig.png"):
     return np.array(img)
 
 
-def mutate(population, img_shape, char_shape):
+def mutate(population, img_shape, char_shape, char_base):
     for dna in population:
         x = random.randint(0, img_shape[1]//char_shape[1] - 1)
         y = random.randint(0, img_shape[0]//char_shape[0] - 1)
@@ -74,7 +75,7 @@ def mutate(population, img_shape, char_shape):
 
         foreground = random.randint(0, 255)
         background = random.randint(0, 255)
-        symbol = random.choice('abcd')
+        symbol = random.choice(char_base)
 
         dna[y:end_y, x:end_x] = Char(symbol, foreground, background)
 
@@ -91,15 +92,11 @@ def scores(population, orig_img, char_shape):
 
 
 def corss(population, best):
-    l = []
-    for idx in range(population.shape[0]):
-        l.append(np.copy(population[idx % BEST_NUM]))
-
-    return np.array(l)
+    result = np.array([np.copy(population[idx % BEST_NUM]) for idx in range(population.shape[0])])
+    return result
 
 
 def dna_to_img(dna, img_shape, char_shape):
-    print(img_shape[1], img_shape[0])
     img = Image.new("L", color=BLACK, size=(img_shape[1], img_shape[0]))
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(FONT_NAME, size=FONT_SIZE)
@@ -123,7 +120,7 @@ def dump_best(population, best, img_shape, char_shape, step):
     #     return
 
     img = dna_to_img(population[best[0]], img_shape, char_shape)
-    img.save("d" + str(step) + ".png")
+    img.save("a" + str(step) + ".png")
 
 
 if __name__ == '__main__':

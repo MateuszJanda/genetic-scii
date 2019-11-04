@@ -7,8 +7,8 @@ import numpy as np
 
 
 STEPS = 1
-SPEC_CNT = 100
-CHOOSE_BEST = 3
+POPULATION_NUM = 2
+BEST_NUM = 3
 
 IMG_WIDTH = 854
 IMG_HEIGHT = 1012
@@ -31,17 +31,16 @@ class Char:
 
 def main():
     char_width, char_height = singe_char_size()
-    dna = basic_dna(char_width, char_height)
+    population = basic_population(char_width, char_height)
     orig_img = get_orig_image()
 
     for step in range(STEPS):
         print("Generation:", step)
 
-        mutate(dna, char_width, char_height)
-
-        score(dna, orig_img, char_width, char_height)
-
-        corss()
+        mutate(population, char_width, char_height)
+        best = score(population, orig_img, char_width, char_height)
+        dump_best(population, best, char_width, char_height, step)
+        corss(population, best)
 
     print("End")
 
@@ -55,12 +54,9 @@ def singe_char_size():
     return width, height+FONT_SPACING
 
 
-def basic_dna(char_width, char_height):
-    dna = []
-    for _ in range(SPEC_CNT):
-        dna.append([[Char() for _ in range(IMG_WIDTH//char_width)] for _ in range(IMG_HEIGHT//char_height)])
-
-    return dna
+def basic_population(char_width, char_height):
+    population = np.full(shape=(POPULATION_NUM, IMG_HEIGHT//char_height, IMG_WIDTH//char_width), fill_value=Char())
+    return population
 
 
 def get_orig_image(path="orig.png"):
@@ -72,8 +68,8 @@ def get_orig_image(path="orig.png"):
     return img
 
 
-def mutate(dna, char_width, char_height):
-    for d in dna:
+def mutate(population, char_width, char_height):
+    for d in population:
         x = random.randint(0, IMG_WIDTH//char_width - 1)
         y = random.randint(0, IMG_HEIGHT//char_height - 1)
         end_x = random.randint(x + 1, IMG_WIDTH//char_width)
@@ -83,23 +79,22 @@ def mutate(dna, char_width, char_height):
         background = random.randint(0, 255)
         symbol = random.choice('abcd')
 
-        for row in range(y, end_y):
-            for col in range(x, end_x):
-                d[row][col] = Char(symbol, foreground, background)
+        d[y:end_y, x:end_x] = Char(symbol, foreground, background)
 
 
-def score(dna, orig_img, char_width, char_height):
+def score(population, orig_img, char_width, char_height):
+    orig_img = np.array(orig_img)
     scores = {}
-    for idx, d in enumerate(dna):
-        img = dna_to_img(d, char_width, char_height)
-        result = np.sum(np.abs(np.array(orig_img) - np.array(img)))
+    for idx, dna in enumerate(population):
+        img = dna_to_img(dna, char_width, char_height)
+        result = np.sum(np.abs(orig_img - np.array(img)))
         scores[idx] = result
 
-    best = sorted(scores.items(), key=operator.itemgetter(1))[:CHOOSE_BEST]
+    best = sorted(scores.items(), key=operator.itemgetter(1))[:BEST_NUM]
     return [idx for idx, _ in best]
 
 
-def corss():
+def corss(population, best):
 
     pass
 
@@ -119,8 +114,18 @@ def dna_to_img(dna, char_width, char_height):
 
 
 def print_dna(dna):
-    for line in dna:
+    for line in population:
         print("".join([ch.symbol for ch in line]))
+
+
+def dump_best(population, best, char_width, char_height, step):
+    if step % 1:
+        return
+
+    print(best[0])
+    img = dna_to_img(population[best[0]], char_width, char_height)
+    img.save(str(step) + ".png")
+
 
 
 if __name__ == '__main__':

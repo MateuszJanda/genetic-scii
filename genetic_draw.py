@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 
 import random
+import operator
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
 
 STEPS = 1
 SPEC_CNT = 100
+CHOOSE_BEST = 3
 
-IMG_WIDTH = 400
-IMG_HEIGHT = 400
+IMG_WIDTH = 854
+IMG_HEIGHT = 1012
 
 BLACK = 0
 WHITE = 255
@@ -40,6 +42,8 @@ def main():
         score(dna, orig_img, char_width, char_height)
 
         corss()
+
+    print("End")
 
 
 def singe_char_size():
@@ -91,10 +95,12 @@ def score(dna, orig_img, char_width, char_height):
         result = np.sum(np.abs(np.array(orig_img) - np.array(img)))
         scores[idx] = result
 
-    return scores
+    best = sorted(scores.items(), key=operator.itemgetter(1))[:CHOOSE_BEST]
+    return [idx for idx, _ in best]
 
 
 def corss():
+
     pass
 
 

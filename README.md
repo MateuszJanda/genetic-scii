@@ -8,7 +8,7 @@ Tested with:
 Reduced just enough so as to best fit into the given size
 convert orig.jpg -resize 64x64 shrink.jpg
 
-Fore new size (ignore aspect ratio)
+For new size (ignore aspect ratio)
 convert orig.jpg -resize 400x400\! shrink.jpg
 
 Change RGB to grayscale

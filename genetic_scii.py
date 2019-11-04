@@ -80,8 +80,8 @@ def mutate(population, char_base):
         width, height = img.size
         begin_x = random.randint(0, width//CHAR_SHAPE[1] - 1)
         begin_y = random.randint(0, height//CHAR_SHAPE[0] - 1)
-        end_x = random.randint(begin_x + 1, width//char_shape[1]) // 3
-        end_y = random.randint(begin_y + 1, height//char_shape[0]) // 3
+        end_x = random.randint(begin_x + 1, width//CHAR_SHAPE[1]) // 3
+        end_y = random.randint(begin_y + 1, height//CHAR_SHAPE[0]) // 3
 
         new_foreground = random.randint(0, 255)
         new_background = random.randint(0, 255)

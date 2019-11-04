@@ -6,8 +6,8 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
 
-STEPS = 1
-POPULATION_NUM = 2
+STEPS = 10
+POPULATION_NUM = 5
 BEST_NUM = 3
 
 IMG_WIDTH = 854
@@ -39,8 +39,8 @@ def main():
 
         mutate(population, char_width, char_height)
         best = score(population, orig_img, char_width, char_height)
-        dump_best(population, best, char_width, char_height, step)
-        corss(population, best)
+        population = corss(population, best, char_width, char_height)
+        dump_best(population, best, char_width, char_height, step, 'd')
 
     print("End")
 
@@ -94,9 +94,12 @@ def score(population, orig_img, char_width, char_height):
     return [idx for idx, _ in best]
 
 
-def corss(population, best):
+def corss(population, best, char_width, char_height):
+    l = []
+    for idx in range(population.shape[0]):
+        l.append(np.copy(population[idx % BEST_NUM]))
 
-    pass
+    return np.array(l)
 
 
 def dna_to_img(dna, char_width, char_height):
@@ -118,13 +121,13 @@ def print_dna(dna):
         print("".join([ch.symbol for ch in line]))
 
 
-def dump_best(population, best, char_width, char_height, step):
-    if step % 1:
-        return
+def dump_best(population, best, char_width, char_height, step, x='x'):
+    # if step % 10:
+    #     return
 
     print(best[0])
     img = dna_to_img(population[best[0]], char_width, char_height)
-    img.save(str(step) + ".png")
+    img.save(x + str(step) + ".png")
 
 
 

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 import random
+import time
 import operator
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
 
-STEPS = 50
+STEPS = 10
 POPULATION_NUM = 5
 BEST_NUM = 3
 
@@ -33,12 +34,14 @@ def main():
     population = basic_population(orig_img.shape, char_shape)
 
     for step in range(STEPS):
-        print("Generation:", step)
+        tic = time.time()
 
         mutate(population, orig_img.shape, char_shape, CHAR_BASE_BASIC)
         best = scores(population, orig_img, char_shape)
         population = corss(population, best)
         dump_best(population, best, orig_img.shape, char_shape, step)
+
+        print("Generation:", step, "time:", time.time() - tic)
 
     print("End")
 

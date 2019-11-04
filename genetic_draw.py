@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
 
-STEPS = 2
+STEPS = 50
 POPULATION_NUM = 5
 BEST_NUM = 3
 
@@ -77,7 +77,12 @@ def mutate(population, img_shape, char_shape, char_base):
         background = random.randint(0, 255)
         symbol = random.choice(char_base)
 
-        dna[y:end_y, x:end_x] = Char(symbol, foreground, background)
+        for pos_x in range(x, end_x):
+            for pos_y in range(y, end_y):
+                ch = dna[pos_y, pos_x]
+                f = (ch.foreground + foreground)//2
+                b = (ch.background + background)//2
+                dna[pos_y, pos_x] = Char(symbol, f, b)
 
 
 def scores(population, orig_img, char_shape):
@@ -116,8 +121,8 @@ def print_dna(dna):
 
 
 def dump_best(population, best, img_shape, char_shape, step):
-    # if step % 10:
-    #     return
+    if step % 10:
+        return
 
     img = dna_to_img(population[best[0]], img_shape, char_shape)
     img.save("a" + str(step) + ".png")

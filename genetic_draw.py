@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
 
-STEPS = 21
+STEPS = 1000
 POPULATION_NUM = 100
 BEST_NUM = 3
 
@@ -97,8 +97,8 @@ def mutate(population, char_shape, char_base):
                 dna[y, x] = Char(symbol, f, b)
 
                 pos_x, pos_y = x*char_shape[1], y*char_shape[0]
-                draw.rectangle(xy=[(pos_x, pos_y), (pos_x + char_shape[1], pos_y + char_shape[0])], fill=char.background)
-                draw.text(xy=(pos_x, pos_y), text=char.symbol, fill=char.foreground, font=font, spacing=FONT_SPACING)
+                draw.rectangle(xy=[(pos_x, pos_y), (pos_x + char_shape[1], pos_y + char_shape[0])], fill=b)
+                draw.text(xy=(pos_x, pos_y), text=symbol, fill=f, font=font, spacing=FONT_SPACING)
 
 
 def scores(population, orig_img, char_shape):

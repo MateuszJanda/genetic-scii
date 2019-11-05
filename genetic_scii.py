@@ -10,8 +10,8 @@ import numpy as np
 
 CHAR_BASE_BASIC = 'asdf'
 
-STEPS = 10
-POPULATION_NUM = 2
+STEPS = 5000
+POPULATION_NUM = 200
 BEST_NUM = 3
 
 BLACK = 0
@@ -80,8 +80,8 @@ def mutate(population, char_base):
         width, height = img.size
         begin_x = random.randint(0, width//CHAR_SHAPE[1] - 1)
         begin_y = random.randint(0, height//CHAR_SHAPE[0] - 1)
-        end_x = random.randint(begin_x + 1, width//CHAR_SHAPE[1]) // 3
-        end_y = random.randint(begin_y + 1, height//CHAR_SHAPE[0]) // 3
+        size_x = random.randint(1, width//CHAR_SHAPE[1] - begin_x) // 3
+        size_y = random.randint(1, height//CHAR_SHAPE[0] - begin_y) // 3
 
         new_foreground = random.randint(0, 255)
         new_background = random.randint(0, 255)
@@ -89,8 +89,8 @@ def mutate(population, char_base):
 
         draw = ImageDraw.Draw(img)
 
-        for x in range(begin_x, end_x):
-            for y in range(begin_y, end_y):
+        for x in range(begin_x, begin_x + size_x):
+            for y in range(begin_y, begin_y + size_y):
                 char = dna[y, x]
                 foreground = (char.foreground + new_foreground)//2
                 background = (char.background + new_background)//2

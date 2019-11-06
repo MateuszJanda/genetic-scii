@@ -52,9 +52,9 @@ def main():
         mutate(population, CHAR_BASE_BASIC)
         best = scores(population, orig_img)
         population = corss(population, best)
-        dump_best(population, best, orig_img.shape, step)
+        dump_best(population, best, step)
 
-        print("Generation:", step, "time:", time.time() - tic)
+        print("Generation:", step, "time:", time.time() - tic, "best:", best[0])
 
     print("End")
 
@@ -77,11 +77,12 @@ def get_orig_img(path="orig.png"):
 
 def mutate(population, char_base):
     for dna, img in population:
-        width, height = img.size
-        begin_x = random.randint(0, width//CHAR_SHAPE[1] - 1)
-        begin_y = random.randint(0, height//CHAR_SHAPE[0] - 1)
-        size_x = random.randint(1, width//CHAR_SHAPE[1] - begin_x) // 3
-        size_y = random.randint(1, height//CHAR_SHAPE[0] - begin_y) // 3
+        width = img.size[0]//CHAR_SHAPE[1]
+        height = img.size[1]//CHAR_SHAPE[0]
+        begin_x = random.randint(0, width - 1)
+        begin_y = random.randint(0, height - 1)
+        size_x = random.randint(1, width) // 3
+        size_y = random.randint(1, height) // 3
 
         new_foreground = random.randint(0, 255)
         new_background = random.randint(0, 255)
@@ -89,8 +90,8 @@ def mutate(population, char_base):
 
         draw = ImageDraw.Draw(img)
 
-        for x in range(begin_x, begin_x + size_x):
-            for y in range(begin_y, begin_y + size_y):
+        for x in range(begin_x, min(begin_x + size_x, width)):
+            for y in range(begin_y, min(begin_y + size_y, height)):
                 char = dna[y, x]
                 foreground = (char.foreground + new_foreground)//2
                 background = (char.background + new_background)//2
@@ -137,14 +138,16 @@ def print_dna(dna):
         print("".join([ch.symbol for ch in line]))
 
 
-def dump_best(population, best, img_shape, step):
+def dump_best(population, best, step):
     if step % 10:
         return
 
-    img = dna_to_img(population[best[0]][0], img_shape)
-    img.save("g%04d.png" % step)
+    dna, img = population[best[0]]
+    img_shape = (img.size[1], img.size[0])
+    out_img = dna_to_img(dna, img_shape)
+    out_img.save("a%04d.png" % step)
 
-    assert np.all(np.array(img) == np.array(population[best[0]][1]))
+    assert np.all(np.array(out_img) == np.array(img))
 
 
 if __name__ == '__main__':

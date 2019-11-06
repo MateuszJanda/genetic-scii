@@ -29,7 +29,7 @@ def singe_char_shape():
     img = Image.new("L", color=BLACK, size=(50, 50))
     draw = ImageDraw.Draw(img)
     width, height = draw.textsize(text="a", font=FONT, spacing=FONT_SPACING)
-    return height+FONT_SPACING, width
+    return height + FONT_SPACING, width
 
 CHAR_SHAPE = singe_char_shape()
 
@@ -45,18 +45,18 @@ class Char:
 def main():
     random.seed(1321)
 
-    orig_img = get_orig_img()
-    population = basic_population(orig_img.shape)
+    orig_arr = get_orig_array()
+    population = basic_population(orig_arr.shape)
 
     for step in range(STEPS):
         tic = time.time()
 
         mutate(population, CHAR_BASE_BASIC)
-        best = scores(population, orig_img)
-        population = corss(population, best)
-        dump_best(population, best, step)
+        best_idx, scores = select(population, orig_arr)
+        population = cross(population, best_idx)
+        dump_best(population, best_idx, step)
 
-        print("Generation:", step, "time:", time.time() - tic, "best:", best[0])
+        print("Generation:", step, "time:", time.time() - tic, "best_idx:", scores[best_idx[0]])
 
     print("End")
 
@@ -69,7 +69,7 @@ def basic_population(img_shape):
     return population
 
 
-def get_orig_img(path="orig.png"):
+def get_orig_array(path="orig.png"):
     img = Image.open(path)
 
     assert img.mode == "L"
@@ -105,31 +105,31 @@ def mutate(population, char_base, random_background=True):
                 draw_char(draw, x, y, dna[y, x])
 
 
-def scores(population, orig_img):
+def select(population, orig_arr):
     scores = {}
-    for idx, val in enumerate(population):
-        dna, img = val
-        result = np.sum(np.abs(orig_img - img))
+    for idx, (_, img) in enumerate(population):
+        result = np.sum((orig_arr - img)**2)
         scores[idx] = result
 
-    best = sorted(scores.items(), key=operator.itemgetter(1))[:BEST_NUM]
-    return [idx for idx, _ in best]
+    best_idx = sorted(scores.items(), key=operator.itemgetter(1))[:BEST_NUM]
+    return [idx for idx, _ in best_idx], scores
 
 
-def corss(population, best):
-    result = [np.copy(population[idx % BEST_NUM]) for idx in range(len(population))]
+def cross(population, best_idx):
+    result = [np.copy(population[best_idx[idx % BEST_NUM]]) for idx in range(len(population))]
     return result
+
 
 def print_dna(dna):
     for line in population:
         print("".join([ch.symbol for ch in line]))
 
 
-def dump_best(population, best, step):
+def dump_best(population, best_idx, step):
     if step % 10:
         return
 
-    dna, img = population[best[0]]
+    dna, img = population[best_idx[0]]
     img_shape = (img.size[1], img.size[0])
     out_img = dna_to_img(dna, img_shape)
     out_img.save("a%04d.png" % step)

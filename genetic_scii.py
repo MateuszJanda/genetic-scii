@@ -4,11 +4,13 @@ import random
 import time
 import copy
 import operator
+import string
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
 
 CHAR_BASE_BASIC = 'asdf'
+CHAR_BASE_ASCII = string.digits + string.ascii_letters + string.punctuation
 
 STEPS = 5000
 POPULATION_NUM = 200
@@ -75,7 +77,7 @@ def get_orig_img(path="orig.png"):
     return np.array(img)
 
 
-def mutate(population, char_base):
+def mutate(population, char_base, random_background=True):
     for dna, img in population:
         width = img.size[0]//CHAR_SHAPE[1]
         height = img.size[1]//CHAR_SHAPE[0]
@@ -84,9 +86,12 @@ def mutate(population, char_base):
         size_x = random.randint(1, width) // 3
         size_y = random.randint(1, height) // 3
 
-        new_foreground = random.randint(0, 255)
-        new_background = random.randint(0, 255)
         symbol = random.choice(char_base)
+        new_foreground = random.randint(0, 255)
+        if random_background:
+            new_background = random.randint(0, 255)
+        else:
+            new_background = 0
 
         draw = ImageDraw.Draw(img)
 
@@ -115,6 +120,22 @@ def corss(population, best):
     result = [np.copy(population[idx % BEST_NUM]) for idx in range(len(population))]
     return result
 
+def print_dna(dna):
+    for line in population:
+        print("".join([ch.symbol for ch in line]))
+
+
+def dump_best(population, best, step):
+    if step % 10:
+        return
+
+    dna, img = population[best[0]]
+    img_shape = (img.size[1], img.size[0])
+    out_img = dna_to_img(dna, img_shape)
+    out_img.save("a%04d.png" % step)
+
+    assert np.all(np.array(out_img) == np.array(img))
+
 
 def dna_to_img(dna, img_shape):
     img = Image.new("L", color=BLACK, size=(img_shape[1], img_shape[0]))
@@ -131,23 +152,6 @@ def draw_char(draw, x, y, char):
     pos_x, pos_y = x*CHAR_SHAPE[1], y*CHAR_SHAPE[0]
     draw.rectangle(xy=[(pos_x, pos_y), (pos_x + CHAR_SHAPE[1] - 1, pos_y + CHAR_SHAPE[0] - 1)], fill=char.background)
     draw.text(xy=(pos_x, pos_y), text=char.symbol, fill=char.foreground, font=FONT, spacing=FONT_SPACING)
-
-
-def print_dna(dna):
-    for line in population:
-        print("".join([ch.symbol for ch in line]))
-
-
-def dump_best(population, best, step):
-    if step % 10:
-        return
-
-    dna, img = population[best[0]]
-    img_shape = (img.size[1], img.size[0])
-    out_img = dna_to_img(dna, img_shape)
-    out_img.save("a%04d.png" % step)
-
-    assert np.all(np.array(out_img) == np.array(img))
 
 
 if __name__ == '__main__':

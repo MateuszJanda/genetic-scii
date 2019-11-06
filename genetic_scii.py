@@ -3,7 +3,6 @@
 import random
 import time
 import copy
-import operator
 import string
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
@@ -83,8 +82,8 @@ def mutate(population, char_base, random_background=True):
         height = img.size[1]//CHAR_SHAPE[0]
         begin_x = random.randint(0, width - 1)
         begin_y = random.randint(0, height - 1)
-        size_x = random.randint(1, width) // 3
-        size_y = random.randint(1, height) // 3
+        size_x = random.randint(1, width)//3
+        size_y = random.randint(1, height)//3
 
         symbol = random.choice(char_base)
         new_foreground = random.randint(0, 255)
@@ -111,8 +110,8 @@ def select(population, orig_arr):
         result = np.sum((orig_arr - img)**2)
         scores[idx] = result
 
-    best_idx = sorted(scores.items(), key=operator.itemgetter(1))[:BEST_NUM]
-    return [idx for idx, _ in best_idx], scores
+    best_idx = sorted(scores, key=scores.get)[:BEST_NUM]
+    return best_idx, scores
 
 
 def cross(population, best_idx):

@@ -44,7 +44,7 @@ class Char:
 def main():
     random.seed(1321)
 
-    orig_arr = get_orig_array()
+    orig_arr = get_orig_array2()
     population = basic_population(orig_arr.shape)
 
     for step in range(STEPS):
@@ -53,7 +53,10 @@ def main():
         mutate(population, CHAR_BASE_BASIC)
         best_idx, scores = select(population, orig_arr)
         population = cross(population, best_idx)
-        dump_best(population, best_idx, step)
+        # dump_img(population, 0, step)
+        # dump_img(population, 1, step)
+        dump_img(population, best_idx[0], step)
+        # break
 
         print("Generation:", step, "time:", time.time() - tic, "best_idx:", scores[best_idx[0]])
 
@@ -76,21 +79,38 @@ def get_orig_array(path="orig.png"):
     return np.array(img)
 
 
+def get_orig_array2(path="orig.png"):
+    img = Image.open(path)
+
+    assert img.mode == "L"
+
+    img = np.array(img)
+
+    for x in range(0, img.shape[1], CHAR_SHAPE[1]):
+        for y in range(0, img.shape[0], CHAR_SHAPE[0]):
+            img[y:y+CHAR_SHAPE[0], x:x+CHAR_SHAPE[1]] = np.average(img[y:y+CHAR_SHAPE[0], x:x+CHAR_SHAPE[1]])
+
+    i = Image.fromarray(img)
+    i.save('blocks.jpg')
+    return img
+
 def mutate(population, char_base, random_background=True):
     for dna, img in population:
         width = img.size[0]//CHAR_SHAPE[1]
         height = img.size[1]//CHAR_SHAPE[0]
         begin_x = random.randint(0, width - 1)
         begin_y = random.randint(0, height - 1)
-        size_x = random.randint(1, width)//3
-        size_y = random.randint(1, height)//3
+        size_x = random.randint(1, width)//12
+        size_y = random.randint(1, height)//12
 
-        symbol = random.choice(char_base)
-        new_foreground = random.randint(0, 255)
-        if random_background:
-            new_background = random.randint(0, 255)
-        else:
-            new_background = 0
+        # symbol = random.choice(char_base)
+        symbol = ' '
+        # new_foreground = random.randint(0, 255)
+        new_foreground = 0
+        # if random_background:
+        new_background = random.randint(0, 255)
+        # else:
+            # new_background = 0
 
         draw = ImageDraw.Draw(img)
 
@@ -111,6 +131,8 @@ def select(population, orig_arr):
         scores[idx] = result
 
     best_idx = sorted(scores, key=scores.get)[:BEST_NUM]
+    print(scores[sorted(scores, key=scores.get)[0]], scores[sorted(scores, key=scores.get)[-1]])
+
     return best_idx, scores
 
 
@@ -124,13 +146,14 @@ def print_dna(dna):
         print("".join([ch.symbol for ch in line]))
 
 
-def dump_best(population, best_idx, step):
-    if step % 10:
-        return
+def dump_img(population, idx, step):
+    # if step % 10:
+    #     return
 
-    dna, img = population[best_idx[0]]
+    dna, img = population[idx]
     img_shape = (img.size[1], img.size[0])
     out_img = dna_to_img(dna, img_shape)
+    # out_img.save(str(idx) + "a%04d.png" % step)
     out_img.save("a%04d.png" % step)
 
     assert np.all(np.array(out_img) == np.array(img))

@@ -14,6 +14,7 @@ CHAR_BASE_ASCII = string.digits + string.ascii_letters + string.punctuation
 STEPS = 5000
 POPULATION_NUM = 200
 BEST_NUM = 3
+MUTATION_FACTOR = 0.1
 
 BLACK = 0
 WHITE = 255
@@ -55,7 +56,7 @@ def main():
         best_idx, scores = select(population, orig_arr)
         population = cross(population, best_idx)
 
-        if step % 10:
+        if step % 10 == 0:
             dump_img(population, best_idx[0], step)
 
         print("Generation:", step, "time:", time.time() - tic, "best_idx:", scores[best_idx[0]])
@@ -92,8 +93,8 @@ def mutate(population, char_base, random_background=True):
         height = img.size[1]//CHAR_SHAPE[0]
         begin_x = random.randint(0, width - 1)
         begin_y = random.randint(0, height - 1)
-        size_x = random.randint(1, width)//12
-        size_y = random.randint(1, height)//12
+        size_x = int(random.randint(1, width) * MUTATION_FACTOR)
+        size_y = int(random.randint(1, height) * MUTATION_FACTOR)
 
         # symbol = random.choice(char_base)
         symbol = ' '
@@ -128,8 +129,12 @@ def select(population, orig_arr):
 
 
 def cross(population, best_idx):
-    best_img = [copy.deepcopy(population[idx]) for idx in best_idx]
-    result = [copy.deepcopy(best_img[idx % BEST_NUM]) for idx in range(len(population))]
+    best_specimens = [copy.deepcopy(population[idx]) for idx in best_idx]
+
+    result = []
+    for idx in range(len(population)):
+        dna, img = best_specimens[idx % BEST_NUM]
+        result.append((np.copy(dna), copy.copy(img)))
 
     return result
 
@@ -143,7 +148,6 @@ def dump_img(population, idx, step):
     dna, img = population[idx]
     img_shape = (img.size[1], img.size[0])
     out_img = dna_to_img(dna, img_shape)
-    # out_img.save(str(idx) + "a%04d.png" % step)
     out_img.save("a%04d.png" % step)
 
     # assert np.all(np.array(out_img) == np.array(img))

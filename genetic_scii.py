@@ -9,12 +9,13 @@ import numpy as np
 
 
 CHAR_BASE_BASIC = 'asdf'
+CHAR_BASE_SPACE = ' '
 CHAR_BASE_ASCII = string.digits + string.ascii_letters + string.punctuation
 
 STEPS = 5000
 POPULATION_NUM = 200
 BEST_NUM = 3
-MUTATION_FACTOR = 0.1
+MUTATION_FACTOR = 1/8
 
 BLACK = 0
 WHITE = 255
@@ -52,7 +53,7 @@ def main():
     for step in range(STEPS):
         tic = time.time()
 
-        mutate(population, CHAR_BASE_BASIC)
+        mutate(population, CHAR_BASE_SPACE)
         best_idx, scores = select(population, orig_arr)
         population = cross(population, best_idx)
 
@@ -61,6 +62,7 @@ def main():
 
         print("Generation:", step, "time:", time.time() - tic, "best_idx:", scores[best_idx[0]])
 
+    dump_img(population, best_idx[0], step)
     print("End")
 
 
@@ -96,14 +98,12 @@ def mutate(population, char_base, random_background=True):
         size_x = int(random.randint(1, width) * MUTATION_FACTOR)
         size_y = int(random.randint(1, height) * MUTATION_FACTOR)
 
-        # symbol = random.choice(char_base)
-        symbol = ' '
-        # new_foreground = random.randint(0, 255)
-        new_foreground = 0
-        # if random_background:
-        new_background = random.randint(0, 255)
-        # else:
-            # new_background = 0
+        symbol = random.choice(char_base)
+        new_foreground = random.randint(0, 255)
+        if random_background:
+            new_background = random.randint(0, 255)
+        else:
+            new_background = 0
 
         draw = ImageDraw.Draw(img)
 

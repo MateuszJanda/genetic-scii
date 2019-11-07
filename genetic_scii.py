@@ -12,10 +12,10 @@ CHAR_BASE_BASIC = 'asdf'
 CHAR_BASE_SPACE = ' '
 CHAR_BASE_ASCII = string.digits + string.ascii_letters + string.punctuation
 
-STEPS = 5000
+STEPS = 5001
 POPULATION_NUM = 200
 BEST_NUM = 3
-MUTATION_FACTOR = 1/8
+MUTATION_FACTOR = 1/3
 
 BLACK = 0
 WHITE = 255

@@ -15,7 +15,7 @@ CHAR_BASE_BOX        = "".join([chr(ch) for ch in range(0x2500, 0x257F+1)])
 # https://en.wikipedia.org/wiki/Block_Elements
 CHAR_BASE_BLOCK      = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
 CHAR_BASE_NOT_ALPHA  = string.punctuation + CHAR_BASE_BOX + CHAR_BASE_BLOCK
-CHAR_BASE_PUNC_BLCOK = string.punctuation + CHAR_BASE_BLOCK
+CHAR_BASE_PUNC_BOX   = string.punctuation + CHAR_BASE_BOX
 
 STEPS = 5001
 POPULATION_NUM = 200
@@ -54,12 +54,13 @@ def main():
     orig_arr = get_orig_array()
     # orig_arr = convert_to_mosaic(orig_arr)
     orig_arr = invert_colors(orig_arr)
+    Image.fromarray(orig_arr).save("orig_arr.png")
     population = basic_population(orig_arr.shape)
 
     for step in range(STEPS):
         tic = time.time()
 
-        mutate(population, CHAR_BASE_NOT_ALPHA, random_background=False)
+        mutate(population, CHAR_BASE_PUNC_BOX, random_background=False)
         best_idx, scores = select(population, orig_arr)
         population = cross(population, best_idx)
 
@@ -73,8 +74,9 @@ def main():
 
 
 def basic_population(img_shape):
-    img = Image.new("L", color=BLACK, size=(img_shape[1], img_shape[0]))
-    dna = np.full(shape=(img_shape[0]//CHAR_SHAPE[0], img_shape[1]//CHAR_SHAPE[1]), fill_value=Char())
+    img = Image.new("L", color=WHITE, size=(img_shape[1], img_shape[0]))
+    dna = np.full(shape=(img_shape[0]//CHAR_SHAPE[0], img_shape[1]//CHAR_SHAPE[1]),
+                  fill_value=Char(background=WHITE))
     population = [(np.copy(dna), copy.copy(img)) for _ in range(POPULATION_NUM)]
     return population
 

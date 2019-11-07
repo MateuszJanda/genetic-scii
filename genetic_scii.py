@@ -8,17 +8,19 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
 
-CHAR_BASE_SPACE = " "
-CHAR_BASE_ASCII = string.digits + string.ascii_letters + string.punctuation
+CHAR_BASE_SPACE      = " "
+CHAR_BASE_ASCII      = string.digits + string.ascii_letters + string.punctuation
 # https://en.wikipedia.org/wiki/Box_Drawing_(Unicode_block)
-CHAR_BASE_BOX   = "".join([chr(ch) for ch in range(0x2500, 0x257f+1)])
+CHAR_BASE_BOX        = "".join([chr(ch) for ch in range(0x2500, 0x257F+1)])
 # https://en.wikipedia.org/wiki/Block_Elements
-CHAR_BASE_BLOCK = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
+CHAR_BASE_BLOCK      = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
+CHAR_BASE_NOT_ALPHA  = string.punctuation + CHAR_BASE_BOX + CHAR_BASE_BLOCK
+CHAR_BASE_PUNC_BLCOK = string.punctuation + CHAR_BASE_BLOCK
 
 STEPS = 5001
 POPULATION_NUM = 200
 BEST_NUM = 3
-MUTATION_FACTOR = 1/10
+MUTATION_FACTOR = 1/12
 
 BLACK = 0
 WHITE = 255
@@ -51,12 +53,13 @@ def main():
 
     orig_arr = get_orig_array()
     # orig_arr = convert_to_mosaic(orig_arr)
+    orig_arr = invert_colors(orig_arr)
     population = basic_population(orig_arr.shape)
 
     for step in range(STEPS):
         tic = time.time()
 
-        mutate(population, CHAR_BASE_BLOCK)
+        mutate(population, CHAR_BASE_NOT_ALPHA, random_background=False)
         best_idx, scores = select(population, orig_arr)
         population = cross(population, best_idx)
 
@@ -89,6 +92,11 @@ def convert_to_mosaic(arr):
         for y in range(0, arr.shape[0], CHAR_SHAPE[0]):
             arr[y:y+CHAR_SHAPE[0], x:x+CHAR_SHAPE[1]] = np.average(arr[y:y+CHAR_SHAPE[0], x:x+CHAR_SHAPE[1]])
 
+    return arr
+
+
+def invert_colors(arr):
+    arr = np.invert(arr) + 255
     return arr
 
 

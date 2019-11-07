@@ -15,7 +15,7 @@ CHAR_BASE_ASCII = string.digits + string.ascii_letters + string.punctuation
 STEPS = 5001
 POPULATION_NUM = 200
 BEST_NUM = 3
-MUTATION_FACTOR = 1/6
+MUTATION_FACTOR = 1/10
 
 BLACK = 0
 WHITE = 255
@@ -47,7 +47,7 @@ def main():
     random.seed(1321)
 
     orig_arr = get_orig_array()
-    orig_arr = convert_to_mosaic(orig_arr)
+    # orig_arr = convert_to_mosaic(orig_arr)
     population = basic_population(orig_arr.shape)
 
     for step in range(STEPS):

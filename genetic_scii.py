@@ -15,7 +15,7 @@ CHAR_BASE_ASCII = string.digits + string.ascii_letters + string.punctuation
 STEPS = 5001
 POPULATION_NUM = 200
 BEST_NUM = 3
-MUTATION_FACTOR = 1/3
+MUTATION_FACTOR = 1/6
 
 BLACK = 0
 WHITE = 255

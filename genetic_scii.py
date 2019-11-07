@@ -79,11 +79,11 @@ def get_orig_array(path="orig.png"):
 
 
 def convert_to_mosaic(arr):
-    for x in range(0, img.shape[1], CHAR_SHAPE[1]):
-        for y in range(0, img.shape[0], CHAR_SHAPE[0]):
-            img[y:y+CHAR_SHAPE[0], x:x+CHAR_SHAPE[1]] = np.average(img[y:y+CHAR_SHAPE[0], x:x+CHAR_SHAPE[1]])
+    for x in range(0, arr.shape[1], CHAR_SHAPE[1]):
+        for y in range(0, arr.shape[0], CHAR_SHAPE[0]):
+            arr[y:y+CHAR_SHAPE[0], x:x+CHAR_SHAPE[1]] = np.average(arr[y:y+CHAR_SHAPE[0], x:x+CHAR_SHAPE[1]])
 
-    return img
+    return arr
 
 
 def mutate(population, char_base, random_background=True):

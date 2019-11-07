@@ -8,9 +8,12 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
 
-CHAR_BASE_BASIC = 'asdf'
-CHAR_BASE_SPACE = ' '
+CHAR_BASE_SPACE = " "
 CHAR_BASE_ASCII = string.digits + string.ascii_letters + string.punctuation
+# https://en.wikipedia.org/wiki/Box_Drawing_(Unicode_block)
+CHAR_BASE_BOX   = "".join([chr(ch) for ch in range(0x2500, 0x257f+1)])
+# https://en.wikipedia.org/wiki/Block_Elements
+CHAR_BASE_BLOCK = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
 
 STEPS = 5001
 POPULATION_NUM = 200
@@ -53,7 +56,7 @@ def main():
     for step in range(STEPS):
         tic = time.time()
 
-        mutate(population, CHAR_BASE_SPACE)
+        mutate(population, CHAR_BASE_BLOCK)
         best_idx, scores = select(population, orig_arr)
         population = cross(population, best_idx)
 

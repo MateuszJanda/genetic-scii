@@ -8,6 +8,13 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
 
+STEPS = 5001
+POPULATION_NUM = 200
+BEST_NUM = 3
+MUTATION_FACTOR = 1
+CROSS_NUM = 2
+
+
 CHAR_BASE_SPACE      = " "
 CHAR_BASE_ASCII      = string.digits + string.ascii_letters + string.punctuation
 # https://en.wikipedia.org/wiki/Box_Drawing_(Unicode_block)
@@ -16,11 +23,6 @@ CHAR_BASE_BOX        = "".join([chr(ch) for ch in range(0x2500, 0x257F+1)])
 CHAR_BASE_BLOCK      = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
 CHAR_BASE_NOT_ALPHA  = string.punctuation + CHAR_BASE_BOX + CHAR_BASE_BLOCK
 CHAR_BASE_PUNC_BOX   = string.punctuation + CHAR_BASE_BOX
-
-STEPS = 5001
-POPULATION_NUM = 200
-BEST_NUM = 3
-MUTATION_FACTOR = 1/12
 
 BLACK = 0
 WHITE = 255
@@ -146,8 +148,21 @@ def cross(population, best_idx):
 
     result = []
     for idx in range(len(population)):
-        dna, img = best_specimens[idx % BEST_NUM]
-        result.append((np.copy(dna), copy.copy(img)))
+        for _ in range(CROSS_NUM):
+            (dna1, img1), (dna2, img2) = random.sample(best_specimens, 2)
+
+            y = np.random.randint(dna1.shape[0] - 1)
+            x = np.random.randint(dna1.shape[1] - 1)
+            end_y = np.random.randint(y, dna1.shape[0])
+            end_x = np.random.randint(x, dna1.shape[1])
+
+            dna = np.copy(dna1)
+            img = copy.copy(img1)
+            dna[y:end_y, x:end_x] = dna2[y:end_y, x:end_x]
+            c = img2.crop(box=(x*CHAR_SHAPE[1], y*CHAR_SHAPE[0], end_x*CHAR_SHAPE[1], end_y*CHAR_SHAPE[0]))
+            img.paste(c, box=(x*CHAR_SHAPE[1], y*CHAR_SHAPE[0]))
+
+            result.append((dna, img))
 
     return result
 

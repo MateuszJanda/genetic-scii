@@ -12,7 +12,7 @@ STEPS = 5001
 POPULATION_NUM = 200
 BEST_NUM = 3
 MUTATION_FACTOR = 1
-CROSS_NUM = 2
+CROSS_NUM = 0
 
 
 CHAR_BASE_SPACE      = " "
@@ -62,14 +62,14 @@ def main():
     for step in range(STEPS):
         tic = time.time()
 
-        mutate(population, CHAR_BASE_PUNC_BOX, random_background=False)
+        mutate(population, CHAR_BASE_SPACE, random_background=False)
         best_idx, scores = select(population, orig_arr)
         population = cross(population, best_idx)
 
         if step % 10 == 0:
             dump_img(population, best_idx[0], step)
 
-        print("Generation:", step, "time:", time.time() - tic, "best_idx:", scores[best_idx[0]])
+        print("Generation:", step, "time:", time.time() - tic, "best score:", scores[best_idx[0]])
 
     dump_img(population, best_idx[0], step)
     print("End")
@@ -100,7 +100,7 @@ def convert_to_mosaic(arr):
 
 
 def invert_colors(arr):
-    arr = np.invert(arr) + 255
+    arr = np.invert(arr)
     return arr
 
 

@@ -8,8 +8,8 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
 
-STEPS = 5001
-POPULATION_NUM = 200
+STEPS = 101
+POPULATION_NUM = 20
 BEST_NUM = 3
 MUTATION_FACTOR = 1
 CROSS_NUM = 0
@@ -55,8 +55,8 @@ def main():
 
     orig_arr = get_orig_array()
     # orig_arr = convert_to_mosaic(orig_arr)
-    orig_arr = invert_colors(orig_arr)
-    Image.fromarray(orig_arr).save("orig_arr.png")
+    # orig_arr = invert_colors(orig_arr)
+    # Image.fromarray(orig_arr).save("orig_arr.png")
     population = basic_population(orig_arr.shape)
 
     for step in range(STEPS):
@@ -69,7 +69,7 @@ def main():
         if step % 10 == 0:
             dump_img(population, best_idx[0], step)
 
-        print("Generation:", step, "time:", time.time() - tic, "best score:", scores[best_idx[0]])
+        print("Generation:", step, "time:", time.time() - tic, "best/worst:", scores[best_idx[0]], scores[best_idx[-1]])
 
     dump_img(population, best_idx[0], step)
     print("End")
@@ -135,7 +135,7 @@ def mutate(population, char_base, random_background=True):
 def select(population, orig_arr):
     scores = {}
     for idx, (_, img) in enumerate(population):
-        result = np.sum((orig_arr - img)**2)
+        result = np.sum(np.subtract(orig_arr, img, dtype=np.int64)**2)
         scores[idx] = result
 
     best_idx = sorted(scores, key=scores.get)[:BEST_NUM]

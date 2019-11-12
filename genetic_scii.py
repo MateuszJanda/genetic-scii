@@ -8,21 +8,21 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
 
-STEPS = 101
-POPULATION_NUM = 20
+STEPS = 5001
+POPULATION_NUM = 200
 BEST_NUM = 3
-MUTATION_FACTOR = 1
-CROSS_NUM = 0
+MUTATION_FACTOR = 1/8
+CROSS_NUM = 2
 
 
-CHAR_BASE_SPACE      = " "
-CHAR_BASE_ASCII      = string.digits + string.ascii_letters + string.punctuation
+CHAR_BASE_SPACE     = " "
+CHAR_BASE_ASCII     = string.digits + string.ascii_letters + string.punctuation
 # https://en.wikipedia.org/wiki/Box_Drawing_(Unicode_block)
-CHAR_BASE_BOX        = "".join([chr(ch) for ch in range(0x2500, 0x257F+1)])
+CHAR_BASE_BOX       = "".join([chr(ch) for ch in range(0x2500, 0x257F+1)])
 # https://en.wikipedia.org/wiki/Block_Elements
-CHAR_BASE_BLOCK      = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
-CHAR_BASE_NOT_ALPHA  = string.punctuation + CHAR_BASE_BOX + CHAR_BASE_BLOCK
-CHAR_BASE_PUNC_BOX   = string.punctuation + CHAR_BASE_BOX
+CHAR_BASE_BLOCK     = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
+CHAR_BASE_NOT_ALPHA = string.punctuation + CHAR_BASE_BOX + CHAR_BASE_BLOCK
+CHAR_BASE_PUNCT_BOX = string.punctuation + CHAR_BASE_BOX
 
 BLACK = 0
 WHITE = 255
@@ -62,12 +62,15 @@ def main():
     for step in range(STEPS):
         tic = time.time()
 
-        mutate(population, CHAR_BASE_SPACE, random_background=False)
+        mutate(population, CHAR_BASE_PUNCT_BOX)
         best_idx, scores = select(population, orig_arr)
         population = cross(population, best_idx)
 
         if step % 10 == 0:
             dump_img(population, best_idx[0], step)
+
+        if scores[best_idx[0]] - scores[best_idx[-1]] == 0:
+            print("Stagnation: ", scores[best_idx[0]], scores[best_idx[-1]])
 
         print("Generation:", step, "time:", time.time() - tic, "best/worst:", scores[best_idx[0]], scores[best_idx[-1]])
 
@@ -76,9 +79,10 @@ def main():
 
 
 def basic_population(img_shape):
-    img = Image.new("L", color=WHITE, size=(img_shape[1], img_shape[0]))
+    bk_color = BLACK
+    img = Image.new("L", color=bk_color, size=(img_shape[1], img_shape[0]))
     dna = np.full(shape=(img_shape[0]//CHAR_SHAPE[0], img_shape[1]//CHAR_SHAPE[1]),
-                  fill_value=Char(background=WHITE))
+                  fill_value=Char(background=bk_color))
     population = [(np.copy(dna), copy.copy(img)) for _ in range(POPULATION_NUM)]
     return population
 

@@ -147,7 +147,7 @@ def cross(population, best_idx):
     best_specimens = [copy.deepcopy(population[idx]) for idx in best_idx]
 
     result = []
-    for idx in range(len(population)):
+    for _ in range(len(population)):
         (dna1, img1), (dna2, img2) = random.sample(best_specimens, 2)
         dna = np.copy(dna1)
         img = copy.copy(img1)
@@ -155,8 +155,8 @@ def cross(population, best_idx):
         for _ in range(CROSS_NUM):
             y = np.random.randint(dna.shape[0] - 1)
             x = np.random.randint(dna.shape[1] - 1)
-            end_y = np.random.randint(y, dna.shape[0])
-            end_x = np.random.randint(x, dna.shape[1])
+            end_y = np.random.randint(y + 1, dna.shape[0])
+            end_x = np.random.randint(x + 1, dna.shape[1])
 
             dna[y:end_y, x:end_x] = dna2[y:end_y, x:end_x]
             c = img2.crop(box=(x*CHAR_SHAPE[1], y*CHAR_SHAPE[0], end_x*CHAR_SHAPE[1], end_y*CHAR_SHAPE[0]))

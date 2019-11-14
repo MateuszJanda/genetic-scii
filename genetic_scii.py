@@ -51,7 +51,9 @@ class Char:
 
 
 def main():
-    random.seed(1321)
+    seed = 3
+    random.seed(seed)
+    np.random.seed(seed)
 
     orig_arr = get_orig_array()
     # orig_arr = convert_to_mosaic(orig_arr)
@@ -172,7 +174,7 @@ def cross(population, best_idx):
 
 
 def print_dna(dna):
-    for line in population:
+    for line in dna:
         print("".join([ch.symbol for ch in line]))
 
 

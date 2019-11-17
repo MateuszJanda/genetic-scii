@@ -29,15 +29,20 @@ WHITE = 255
 
 FONT_NAME = 'DejaVuSansMono'
 FONT_SIZE = 16
-FONT_SPACING = 2
+FONT_SPACING = 0
 FONT = ImageFont.truetype(FONT_NAME, size=FONT_SIZE)
 
 
 def singe_char_shape():
+    """
+    Character size estimation. Pillow doesn't have good method to get chars/font
+    metrics, especially Unicode box-drawing characters are drown out of border
+    (top/left).
+    """
     img = Image.new("L", color=BLACK, size=(50, 50))
     draw = ImageDraw.Draw(img)
-    width, height = draw.textsize(text="a", font=FONT, spacing=FONT_SPACING)
-    return height + FONT_SPACING, width
+    width, height = draw.textsize(text="╂", font=FONT, spacing=FONT_SPACING)
+    return height, width
 
 CHAR_SHAPE = singe_char_shape()
 
@@ -58,7 +63,6 @@ def main():
     orig_arr = get_orig_array()
     # orig_arr = convert_to_mosaic(orig_arr)
     # orig_arr = invert_colors(orig_arr)
-    # Image.fromarray(orig_arr).save("orig_arr.png")
     population = basic_population(orig_arr.shape)
 
     for step in range(STEPS):
@@ -71,10 +75,9 @@ def main():
         if step % 10 == 0:
             dump_img(population, best_idx[0], step)
 
-        if scores[best_idx[0]] - scores[best_idx[-1]] == 0:
-            print("Stagnation: ", scores[best_idx[0]], scores[best_idx[-1]])
-
-        print("Generation:", step, "time:", time.time() - tic, "best/worst:", scores[best_idx[0]], scores[best_idx[-1]])
+        print("Generation: {step}, time: {t}, best: {best}, diff: {diff}"
+            .format(step=step, t=time.time() - tic, best=scores[best_idx[0]],
+                diff=scores[best_idx[-1]] - scores[best_idx[0]]))
 
     dump_img(population, best_idx[0], step)
     print("End")
@@ -200,6 +203,7 @@ def dna_to_img(dna, img_shape):
 
 def draw_char(draw, x, y, char):
     pos_x, pos_y = x*CHAR_SHAPE[1], y*CHAR_SHAPE[0]
+    # Borders are part of rectangle so we must subtract 1 from bottom and right
     draw.rectangle(xy=[(pos_x, pos_y), (pos_x + CHAR_SHAPE[1] - 1, pos_y + CHAR_SHAPE[0] - 1)], fill=char.background)
     draw.text(xy=(pos_x, pos_y), text=char.symbol, fill=char.foreground, font=FONT, spacing=FONT_SPACING)
 

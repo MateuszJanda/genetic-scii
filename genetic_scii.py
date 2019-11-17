@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+Author: Mateusz Janda <mateusz janda at gmail com>
+Site: github.com/MateuszJanda
+Ad maiorem Dei gloriam
+"""
+
 import random
 import time
 import copy
@@ -191,6 +197,10 @@ def dump_img(population, idx, step):
 
 
 def dna_to_img(dna, img_shape):
+    """
+    For some characters Pillow doesn't draw them in correct position, so output
+    image could contain some glitches, and differ from input image.
+    """
     img = Image.new("L", color=BLACK, size=(img_shape[1], img_shape[0]))
     draw = ImageDraw.Draw(img)
 

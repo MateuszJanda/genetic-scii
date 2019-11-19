@@ -10,6 +10,7 @@ import random
 import time
 import copy
 import string
+import pickle
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
@@ -79,13 +80,13 @@ def main():
         population = cross(population, best_idx)
 
         if step % 10 == 0:
-            dump_img(population, best_idx[0], step)
+            save_dna_as_img(population, best_idx[0], step)
 
         print("Generation: {step}, time: {t}, best: {best}, diff: {diff}"
             .format(step=step, t=time.time() - tic, best=scores[best_idx[0]],
                 diff=scores[best_idx[-1]] - scores[best_idx[0]]))
 
-    dump_img(population, best_idx[0], step)
+    save_dna_as_img(population, best_idx[0], step)
     print("End")
 
 
@@ -187,7 +188,20 @@ def print_dna(dna):
         print("".join([ch.symbol for ch in line]))
 
 
-def dump_img(population, idx, step):
+def load_dna_from_pickle(file_name):
+    with open(file_name, "rb") as f:
+        dna = pickle.load(f)
+
+    return dna
+
+
+def save_dna_as_pickle(population, idx, step):
+    dna, _ = population[idx]
+    with open("p%04d.dat" % step, "wb") as f:
+        pickle.dump(dna, f)
+
+
+def save_dna_as_img(population, idx, step):
     dna, img = population[idx]
     img_shape = (img.size[1], img.size[0])
     out_img = dna_to_img(dna, img_shape)

@@ -115,6 +115,13 @@ def convert_to_mosaic(arr):
     return arr
 
 
+def convert_to_contours(arr):
+    """
+    https://docs.opencv.org/master/d2/d2c/tutorial_sobel_derivatives.html
+    """
+    pass
+
+
 def invert_colors(arr):
     arr = np.invert(arr)
     return arr

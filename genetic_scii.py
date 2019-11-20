@@ -102,7 +102,7 @@ def basic_population(img_shape):
 def get_orig_array(path="orig.png"):
     img = Image.open(path)
 
-    assert img.mode == "L"
+    assert img.mode == "L", "Gray scale (8-bit) image required"
 
     return np.array(img)
 

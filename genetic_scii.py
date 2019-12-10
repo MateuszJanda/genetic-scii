@@ -31,6 +31,8 @@ CHAR_BASE_BLOCK     = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
 CHAR_BASE_NOT_ALPHA = string.punctuation + CHAR_BASE_BOX + CHAR_BASE_BLOCK
 CHAR_BASE_PUNCT_BOX = string.punctuation + CHAR_BASE_BOX
 
+CHAR_BASE = CHAR_BASE_ASCII
+
 BLACK = 0
 WHITE = 255
 
@@ -75,7 +77,7 @@ def main():
     for step in range(STEPS):
         tic = time.time()
 
-        mutate(population, CHAR_BASE_PUNCT_BOX)
+        mutate(population, CHAR_BASE, random_background=False)
         best_idx, scores = select(population, orig_arr)
         population = cross(population, best_idx)
 

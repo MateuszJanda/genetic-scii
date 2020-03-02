@@ -216,8 +216,8 @@ def create_img(ch):
 def cmp(ch1, ch2):
     img1 = create_img(ch1)
     img2 = create_img(ch2)
-    _, con1, _ = cv2.findContours(img1, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
-    _, con2, _ = cv2.findContours(img2, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+    con1, _ = cv2.findContours(img1, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+    con2, _ = cv2.findContours(img2, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
     hd = cv2.createHausdorffDistanceExtractor()
     sd = cv2.createShapeContextDistanceExtractor()
     print('hd', hd.computeDistance(con1[0], con2[0]))

@@ -12,9 +12,11 @@ import copy
 import string
 import pickle
 from PIL import Image, ImageDraw, ImageFont
+import cv2
 import numpy as np
 
 
+# Evolution parameters
 STEPS = 5001
 POPULATION_NUM = 200
 BEST_NUM = 3
@@ -22,6 +24,7 @@ MUTATION_FACTOR = 1/8
 CROSS_NUM = 2
 
 
+# Different unicode chars sets used to generate final image
 CHAR_BASE_SPACE     = " "
 CHAR_BASE_ASCII     = string.digits + string.ascii_letters + string.punctuation
 # https://en.wikipedia.org/wiki/Box_Drawing_(Unicode_block)
@@ -33,6 +36,8 @@ CHAR_BASE_PUNCT_BOX = string.punctuation + CHAR_BASE_BOX
 
 CHAR_BASE = CHAR_BASE_ASCII
 
+
+# Image and font configuration
 BLACK = 0
 WHITE = 255
 
@@ -58,6 +63,10 @@ CHAR_SHAPE = singe_char_shape()
 
 
 class Char:
+    """
+    Single char property (symbol, foreground and background). DNA is array
+    Chars.
+    """
     def __init__(self, symbol=" ", foreground=WHITE, background=BLACK):
         self.symbol = symbol
         self.foreground = foreground
@@ -65,6 +74,12 @@ class Char:
 
 
 def main():
+    """
+    Thre step genetic algorithm:
+    - mutate last population
+    - select (socre) best individuals
+    - cross best individuals
+    """
     seed = 3
     random.seed(seed)
     np.random.seed(seed)
@@ -93,6 +108,12 @@ def main():
 
 
 def basic_population(img_shape):
+    """
+    Create basic population - list of individuals. Each individual is
+    represented as DNA and image (redundant becase image can be generated from
+    DNA, but this operation is expensive). At the beginning each individual is
+    black image.
+    """
     bk_color = BLACK
     img = Image.new("L", color=bk_color, size=(img_shape[1], img_shape[0]))
     dna = np.full(shape=(img_shape[0]//CHAR_SHAPE[0], img_shape[1]//CHAR_SHAPE[1]),
@@ -102,6 +123,9 @@ def basic_population(img_shape):
 
 
 def get_orig_array(path="orig.png"):
+    """
+    Get input image (gray scale) as numpy array.
+    """
     img = Image.open(path)
 
     assert img.mode == "L", "Gray scale (8-bit) image required"
@@ -167,6 +191,37 @@ def select(population, orig_arr):
 
     return best_idx, scores
 
+
+
+def score_shape():
+    """
+    https://docs.opencv.org/3.4.9/d1/d85/group__shape.html
+    https://answers.opencv.org/question/60974/matching-shapes-with-hausdorff-and-shape-context-distance/
+    """
+    pass
+
+def basic_img(img_shape):
+    bk_color = BLACK
+    img = Image.new("L", color=bk_color, size=(img_shape[1], img_shape[0]))
+    return img
+
+def create_img(ch):
+    char = Char(ch)
+    img = basic_img(CHAR_SHAPE)
+    draw = ImageDraw.Draw(img)
+    draw_char(draw, 0, 0, char)
+    display(img)
+    return np.array(img)
+
+def cmp(ch1, ch2):
+    img1 = create_img(ch1)
+    img2 = create_img(ch2)
+    _, con1, _ = cv2.findContours(img1, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+    _, con2, _ = cv2.findContours(img2, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+    hd = cv2.createHausdorffDistanceExtractor()
+    sd = cv2.createShapeContextDistanceExtractor()
+    print('hd', hd.computeDistance(con1[0], con2[0]))
+    print('sd', sd.computeDistance(con1[0], con2[0]))
 
 def cross(population, best_idx):
     best_specimens = [copy.deepcopy(population[idx]) for idx in best_idx]

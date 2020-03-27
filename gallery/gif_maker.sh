@@ -19,9 +19,8 @@ else
         convert $i -resize $SCALE $snap_name
 
         # Merge original (resized) with snapshot (resized)
-        out_name=out_$i
-
-        convert $orig_name $snap_name +append $out_name
+        merge_name=merge_$i
+        convert $orig_name $snap_name +append $merge_name
 
         # Cleanup
         rm $snap_name
@@ -32,7 +31,7 @@ else
 
     PALETTE_FILE="tmp_pallete.png"
     VIDEO_FILE="output_video.mp4"
-    INPUT_FILES="out_snapshot_%4d.png"
+    INPUT_FILES="merge_snapshot_%4d.png"
     OUTPUT_GIF="output.gif"
     FILTERS="fps=25"
 

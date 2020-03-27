@@ -269,7 +269,7 @@ def save_dna_as_img(population, idx, step):
     dna, img = population[idx]
     img_shape = (img.size[1], img.size[0])
     out_img = dna_to_img(dna, img_shape)
-    out_img.save("a%04d.png" % step)
+    out_img.save("snapshot_%04d.png" % step)
 
     # assert np.all(np.array(out_img) == np.array(img))
 

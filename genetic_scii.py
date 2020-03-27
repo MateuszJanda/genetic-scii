@@ -89,6 +89,7 @@ def main():
     # orig_arr = invert_colors(orig_arr)
     population = basic_population(orig_arr.shape)
 
+    counter = 0
     for step in range(STEPS):
         tic = time.time()
 
@@ -97,13 +98,14 @@ def main():
         population = cross(population, best_idx)
 
         if step % 10 == 0:
-            save_dna_as_img(population, best_idx[0], step)
+            save_dna_as_img(population, best_idx[0], counter)
+            counter += 1
 
         print("Generation: {step}, time: {t}, best: {best}, diff: {diff}"
             .format(step=step, t=time.time() - tic, best=scores[best_idx[0]],
                 diff=scores[best_idx[-1]] - scores[best_idx[0]]))
 
-    save_dna_as_img(population, best_idx[0], step)
+    save_dna_as_img(population, best_idx[0], counter)
     print("End")
 
 

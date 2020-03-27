@@ -22,6 +22,7 @@ else
         merge_name=merge_$i
         convert $orig_name $snap_name +append $merge_name
 
+        echo "Preparing $merge_name"
         # Cleanup
         rm $snap_name
     done
@@ -36,7 +37,7 @@ else
     FILTERS="fps=25"
 
     # Create video from *.png files
-    ffmpeg -r 100 -i $INPUT_FILES -c:v libx264 -crf 0 -preset veryslow $VIDEO_FILE
+    ffmpeg -r 10 -i $INPUT_FILES -c:v libx264 -crf 0 -preset veryslow $VIDEO_FILE
 
     # Convert video file to .gif
     ffmpeg -v warning -i $VIDEO_FILE -vf "$FILTERS,palettegen" -y $PALETTE_FILE

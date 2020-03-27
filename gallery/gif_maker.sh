@@ -22,7 +22,13 @@ else
         out_name=out_$i
 
         convert $orig_name $snap_name +append $out_name
+
+        # Cleanup
+        rm $snap_name
     done
+
+    # Removed resized original file
+    rm $orig_name
 
     PALETTE_FILE="tmp_pallete.png"
     VIDEO_FILE="output_video.mp4"

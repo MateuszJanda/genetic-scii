@@ -85,7 +85,7 @@ def main():
     random.seed(seed)
     np.random.seed(seed)
 
-    orig_arr = get_orig_array()
+    orig_arr = get_orig_array("rect.png")
     population = basic_population(orig_arr.shape)
 
     counter = 0
@@ -126,6 +126,9 @@ def basic_population(img_shape):
 def get_orig_array(path="orig.png"):
     """
     Get input image (gray scale) as numpy array.
+
+    ImageMagic - convert to gray scale image:
+    convert rectangle.png  -fx 'intensity/8' rect.png
     """
     img = Image.open(path)
 

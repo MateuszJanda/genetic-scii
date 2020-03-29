@@ -91,7 +91,7 @@ def main():
     for step in range(STEPS):
         tic = time.time()
 
-        mutate(population, CHAR_BASE, random_background=True)
+        mutate(population, CHAR_BASE, mutate_background=True)
         best_idx, scores = select(population, orig_arr)
         population = cross(population, best_idx)
 
@@ -142,7 +142,10 @@ def convert_to_contours(arr):
 
 
 
-def mutate(population, char_base, random_background=True):
+def mutate(population, char_base, mutate_background=True):
+    """
+    Mutate - add random "rectangle" to each individal in population.
+    """
     for dna, img in population:
         width = img.size[0]//CHAR_SHAPE[1]
         height = img.size[1]//CHAR_SHAPE[0]
@@ -153,7 +156,7 @@ def mutate(population, char_base, random_background=True):
 
         symbol = random.choice(char_base)
         new_foreground = random.randint(0, 255)
-        if random_background:
+        if mutate_background:
             new_background = random.randint(0, 255)
         else:
             new_background = 0
@@ -171,6 +174,10 @@ def mutate(population, char_base, random_background=True):
 
 
 def select(population, orig_arr):
+    """
+    Score all individuals in population and choose BEST_NUM of them (from best
+    to worst).
+    """
     scores = {}
     for idx, (_, img) in enumerate(population):
         result = np.sum(np.subtract(orig_arr, img, dtype=np.int64)**2)
@@ -191,6 +198,11 @@ def score_shape():
 
 
 def cross(population, best_idx):
+    """
+    Cross individuals in population (preview called select method shoud narrow
+    this to BEST_NUM individuals). Copy random rectable/matrix from one
+    individual and merge it with second indivudal.
+    """
     best_specimens = [copy.deepcopy(population[idx]) for idx in best_idx]
 
     result = []
@@ -215,11 +227,17 @@ def cross(population, best_idx):
 
 
 def print_dna(dna):
+    """
+    For debug only - draw raw character representation of indyvidual DNA.
+    """
     for line in dna:
         print("".join([ch.symbol for ch in line]))
 
 
 def load_dna_from_pickle(file_name):
+    """
+    Load DNA from pickle.
+    """
     with open(file_name, "rb") as f:
         dna = pickle.load(f)
 
@@ -227,17 +245,25 @@ def load_dna_from_pickle(file_name):
 
 
 def save_dna_as_pickle(population, idx, step):
+    """
+    Serialize DNA.
+    """
     dna, _ = population[idx]
     with open("p%04d.dat" % step, "wb") as f:
         pickle.dump(dna, f)
 
 
 def save_dna_as_img(population, idx, step):
+    """
+    Save DNA as image.
+    """
     dna, img = population[idx]
     img_shape = (img.size[1], img.size[0])
     out_img = dna_to_img(dna, img_shape)
     out_img.save("snapshot_%04d.png" % step)
 
+    # Problem with Pillow not deterministic char shape calculation, so in worst
+    # case this two images could differ
     # assert np.all(np.array(out_img) == np.array(img))
 
 
@@ -257,6 +283,9 @@ def dna_to_img(dna, img_shape):
 
 
 def draw_char(draw, x, y, char):
+    """
+    Draw character on the image.
+    """
     pos_x, pos_y = x*CHAR_SHAPE[1], y*CHAR_SHAPE[0]
     # Borders are part of rectangle so we must subtract 1 from bottom and right
     draw.rectangle(xy=[(pos_x, pos_y), (pos_x + CHAR_SHAPE[1] - 1, pos_y + CHAR_SHAPE[0] - 1)], fill=char.background)

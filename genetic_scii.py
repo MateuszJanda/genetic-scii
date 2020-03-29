@@ -34,7 +34,7 @@ CHAR_BASE_BLOCK     = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
 CHAR_BASE_NOT_ALPHA = string.punctuation + CHAR_BASE_BOX + CHAR_BASE_BLOCK
 CHAR_BASE_PUNCT_BOX = string.punctuation + CHAR_BASE_BOX
 
-CHAR_BASE = CHAR_BASE_BLOCK
+CHAR_BASE = CHAR_BASE_ASCII
 
 
 # Image and font configuration
@@ -92,8 +92,8 @@ def main():
     for step in range(STEPS):
         tic = time.time()
 
-        mutate(population, CHAR_BASE, mutate_background=True)
-        best_idx, scores = select(population, orig_arr, score_fun=score_pixels)
+        mutate(population, CHAR_BASE, mutate_background=False)
+        best_idx, scores = select(population, orig_arr, score_fun=score_shape)
         population = cross(population, best_idx)
 
         if step % 10 == 0:
@@ -218,11 +218,17 @@ def score_shape(orig_arr, img):
             end_y = begin_y + CHAR_SHAPE[0]
 
             contours1, _ = cv2.findContours(orig_arr[begin_y:end_y, begin_x:end_x], cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
-            contours2, _ = cv2.findContours(img[begin_y:end_y, begin_x:end_x], cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+            if not contours1:
+                continue
+
+            img_arr = np.array(img)
+            contours2, _ = cv2.findContours(img_arr[begin_y:end_y, begin_x:end_x], cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+            if not contours2:
+                continue
+
             result += hd.computeDistance(contours1[0], contours2[0])
 
     return result
-
 
 
 def cross(population, best_idx):

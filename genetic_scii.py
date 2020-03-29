@@ -58,7 +58,7 @@ def singe_char_shape():
     width, height = draw.textsize(text="╂", font=FONT, spacing=FONT_SPACING)
     return height, width
 
-# Precalculate single char shape
+# Pre-calculated single char shape
 CHAR_SHAPE = singe_char_shape()
 
 
@@ -143,7 +143,7 @@ def convert_to_contours(arr):
 
 def mutate(population, char_base, mutate_background=True):
     """
-    Mutate - add random "rectangle" to each individal in population. Could be
+    Mutate - add random "rectangle" to each individual in population. Could be
     tuned by MUTATION_FACTOR.
     """
     for dna, img in population:
@@ -190,24 +190,46 @@ def select(population, orig_arr, score_fun):
 
 def score_pixels(orig_arr, img):
     """
-    Score pixels difference between two images.
+    Score pixels differences between two images.
     """
     return np.sum(np.subtract(orig_arr, img, dtype=np.int64)**2)
 
 
-def score_shape():
+def score_shape(orig_arr, img):
     """
+    Score characters shape differences between two different images (currently
+    Hausdorff distance).
+
+    Reference:
     https://docs.opencv.org/3.4.9/d1/d85/group__shape.html
     https://answers.opencv.org/question/60974/matching-shapes-with-hausdorff-and-shape-context-distance/
     """
-    pass
+    hd = cv2.createHausdorffDistanceExtractor()
+
+    width = img.size[0]//CHAR_SHAPE[1]
+    height = img.size[1]//CHAR_SHAPE[0]
+    result = 0
+
+    for x in range(width):
+        for y in range(height):
+            begin_x = x*CHAR_SHAPE[1]
+            begin_y = y*CHAR_SHAPE[0]
+            end_x = begin_x + CHAR_SHAPE[1]
+            end_y = begin_y + CHAR_SHAPE[0]
+
+            contours1, _ = cv2.findContours(orig_arr[begin_y:end_y, begin_x:end_x], cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+            contours2, _ = cv2.findContours(img[begin_y:end_y, begin_x:end_x], cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+            result += hd.computeDistance(contours1[0], contours2[0])
+
+    return result
+
 
 
 def cross(population, best_idx):
-    """
-    Cross individuals in population (preview called select method shoud narrow
-    this to BEST_NUM individuals). Copy random rectable/matrix from one
-    individual and merge it with second indivudal.
+    """f
+    Cross individuals in population (preview called select method should narrow
+    this to BEST_NUM individuals). Copy random rectangle/matrix from one
+    individual and merge it with second individual.
     """
     best_specimens = [copy.deepcopy(population[idx]) for idx in best_idx]
 
@@ -234,7 +256,7 @@ def cross(population, best_idx):
 
 def print_dna(dna):
     """
-    For debug only - draw raw character representation of indyvidual DNA.
+    For debug only - draw raw character representation of individual DNA.
     """
     for line in dna:
         print("".join([ch.symbol for ch in line]))

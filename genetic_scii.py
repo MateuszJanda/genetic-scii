@@ -58,6 +58,7 @@ def singe_char_shape():
     width, height = draw.textsize(text="╂", font=FONT, spacing=FONT_SPACING)
     return height, width
 
+# Precalculate single char shape
 CHAR_SHAPE = singe_char_shape()
 
 
@@ -92,7 +93,7 @@ def main():
         tic = time.time()
 
         mutate(population, CHAR_BASE, mutate_background=True)
-        best_idx, scores = select(population, orig_arr)
+        best_idx, scores = select(population, orig_arr, score_fun=score_pixels)
         population = cross(population, best_idx)
 
         if step % 10 == 0:
@@ -173,19 +174,26 @@ def mutate(population, char_base, mutate_background=True):
                 draw_char(draw, x, y, dna[y, x])
 
 
-def select(population, orig_arr):
+def select(population, orig_arr, score_fun):
     """
     Score all individuals in population and choose BEST_NUM of them (from best
     to worst).
     """
     scores = {}
     for idx, (_, img) in enumerate(population):
-        result = np.sum(np.subtract(orig_arr, img, dtype=np.int64)**2)
+        result = score_fun(orig_arr, img)
         scores[idx] = result
 
     best_idx = sorted(scores, key=scores.get)[:BEST_NUM]
 
     return best_idx, scores
+
+
+def score_pixels(orig_arr, img):
+    """
+    Score pixels difference between two images.
+    """
+    return np.sum(np.subtract(orig_arr, img, dtype=np.int64)**2)
 
 
 
@@ -246,7 +254,7 @@ def load_dna_from_pickle(file_name):
 
 def save_dna_as_pickle(population, idx, step):
     """
-    Serialize DNA.
+    Serialize DNA to pickle.
     """
     dna, _ = population[idx]
     with open("p%04d.dat" % step, "wb") as f:

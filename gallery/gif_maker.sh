@@ -5,7 +5,7 @@ if [[ -z $1 ]]; then
     echo "Usage:"
     echo "   ./gif_maker.sh input.png"
 else
-    SCALE="400x400"
+    SCALE="600x600"
 
     # Shrink original image
     orig_name=resize_$1

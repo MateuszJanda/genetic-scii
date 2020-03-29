@@ -34,7 +34,7 @@ CHAR_BASE_BLOCK     = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
 CHAR_BASE_NOT_ALPHA = string.punctuation + CHAR_BASE_BOX + CHAR_BASE_BLOCK
 CHAR_BASE_PUNCT_BOX = string.punctuation + CHAR_BASE_BOX
 
-CHAR_BASE = CHAR_BASE_ASCII
+CHAR_BASE = CHAR_BASE_BLOCK
 
 
 # Image and font configuration
@@ -75,9 +75,9 @@ class Char:
 
 def main():
     """
-    Thre step genetic algorithm:
+    Three step genetic algorithm:
     - mutate last population
-    - select (socre) best individuals
+    - select (score) best individuals
     - cross best individuals
     """
     seed = 3
@@ -85,15 +85,13 @@ def main():
     np.random.seed(seed)
 
     orig_arr = get_orig_array()
-    # orig_arr = convert_to_mosaic(orig_arr)
-    # orig_arr = invert_colors(orig_arr)
     population = basic_population(orig_arr.shape)
 
     counter = 0
     for step in range(STEPS):
         tic = time.time()
 
-        mutate(population, CHAR_BASE, random_background=False)
+        mutate(population, CHAR_BASE, random_background=True)
         best_idx, scores = select(population, orig_arr)
         population = cross(population, best_idx)
 
@@ -112,7 +110,7 @@ def main():
 def basic_population(img_shape):
     """
     Create basic population - list of individuals. Each individual is
-    represented as DNA and image (redundant becase image can be generated from
+    represented as DNA and image (redundant because image can be generated from
     DNA, but this operation is expensive). At the beginning each individual is
     black image.
     """
@@ -135,13 +133,6 @@ def get_orig_array(path="orig.png"):
     return np.array(img)
 
 
-def convert_to_mosaic(arr):
-    for x in range(0, arr.shape[1], CHAR_SHAPE[1]):
-        for y in range(0, arr.shape[0], CHAR_SHAPE[0]):
-            arr[y:y+CHAR_SHAPE[0], x:x+CHAR_SHAPE[1]] = np.average(arr[y:y+CHAR_SHAPE[0], x:x+CHAR_SHAPE[1]])
-
-    return arr
-
 
 def convert_to_contours(arr):
     """
@@ -149,10 +140,6 @@ def convert_to_contours(arr):
     """
     pass
 
-
-def invert_colors(arr):
-    arr = np.invert(arr)
-    return arr
 
 
 def mutate(population, char_base, random_background=True):
@@ -202,28 +189,6 @@ def score_shape():
     """
     pass
 
-def basic_img(img_shape):
-    bk_color = BLACK
-    img = Image.new("L", color=bk_color, size=(img_shape[1], img_shape[0]))
-    return img
-
-def create_img(ch):
-    char = Char(ch)
-    img = basic_img(CHAR_SHAPE)
-    draw = ImageDraw.Draw(img)
-    draw_char(draw, 0, 0, char)
-    display(img)
-    return np.array(img)
-
-def cmp(ch1, ch2):
-    img1 = create_img(ch1)
-    img2 = create_img(ch2)
-    con1, _ = cv2.findContours(img1, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
-    con2, _ = cv2.findContours(img2, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
-    hd = cv2.createHausdorffDistanceExtractor()
-    sd = cv2.createShapeContextDistanceExtractor()
-    print('hd', hd.computeDistance(con1[0], con2[0]))
-    print('sd', sd.computeDistance(con1[0], con2[0]))
 
 def cross(population, best_idx):
     best_specimens = [copy.deepcopy(population[idx]) for idx in best_idx]

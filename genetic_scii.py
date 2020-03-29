@@ -134,7 +134,6 @@ def get_orig_array(path="orig.png"):
     return np.array(img)
 
 
-
 def convert_to_contours(arr):
     """
     https://docs.opencv.org/master/d2/d2c/tutorial_sobel_derivatives.html
@@ -142,10 +141,10 @@ def convert_to_contours(arr):
     pass
 
 
-
 def mutate(population, char_base, mutate_background=True):
     """
-    Mutate - add random "rectangle" to each individal in population.
+    Mutate - add random "rectangle" to each individal in population. Could be
+    tuned by MUTATION_FACTOR.
     """
     for dna, img in population:
         width = img.size[0]//CHAR_SHAPE[1]
@@ -194,7 +193,6 @@ def score_pixels(orig_arr, img):
     Score pixels difference between two images.
     """
     return np.sum(np.subtract(orig_arr, img, dtype=np.int64)**2)
-
 
 
 def score_shape():

@@ -17,8 +17,8 @@ import numpy as np
 
 
 # Evolution parameters
-STEPS = 5001
-POPULATION_NUM = 200
+STEPS = 2001
+POPULATION_NUM = 100
 BEST_NUM = 3
 MUTATION_FACTOR = 1/8
 CROSS_NUM = 2
@@ -34,7 +34,7 @@ CHAR_BASE_BLOCK     = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
 CHAR_BASE_NOT_ALPHA = string.punctuation + CHAR_BASE_BOX + CHAR_BASE_BLOCK
 CHAR_BASE_PUNCT_BOX = string.punctuation + CHAR_BASE_BOX
 
-CHAR_BASE = CHAR_BASE_ASCII
+CHAR_BASE = CHAR_BASE_PUNCT_BOX
 
 
 # Image and font configuration
@@ -207,7 +207,14 @@ def score_shape(orig_arr, img):
     https://docs.opencv.org/3.4.9/d1/d85/group__shape.html
     https://answers.opencv.org/question/60974/matching-shapes-with-hausdorff-and-shape-context-distance/
     """
+    PENALTY = 1000
+    THRESHOLD = 20
+    NEW_VALUE = 255
+
     hd = cv2.createHausdorffDistanceExtractor()
+
+    _, img1 = cv2.threshold(orig_arr, THRESHOLD, NEW_VALUE, 0)
+    _, img2 = cv2.threshold(np.array(img), THRESHOLD, NEW_VALUE, 0)
 
     width = img.size[0]//CHAR_SHAPE[1]
     height = img.size[1]//CHAR_SHAPE[0]
@@ -220,16 +227,29 @@ def score_shape(orig_arr, img):
             end_x = begin_x + CHAR_SHAPE[1]
             end_y = begin_y + CHAR_SHAPE[0]
 
-            contours1, _ = cv2.findContours(orig_arr[begin_y:end_y, begin_x:end_x], cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+            # When there is no shape (only background) continue
+            if not np.any(img1[begin_y:end_y, begin_x:end_x]):
+                if np.any(img2[begin_y:end_y, begin_x:end_x]):
+                    result += PENALTY
+                continue
+
+            contours1, _ = cv2.findContours(img1[begin_y:end_y, begin_x:end_x], cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
             if not contours1:
                 continue
 
-            img_arr = np.array(img)
-            contours2, _ = cv2.findContours(img_arr[begin_y:end_y, begin_x:end_x], cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+            contours2, _ = cv2.findContours(img2[begin_y:end_y, begin_x:end_x], cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+            # Penalty when missing shape proposal
             if not contours2:
+                result += PENALTY
                 continue
 
-            result += hd.computeDistance(contours1[0], contours2[0])
+            r = hd.computeDistance(contours1[0], contours2[0])
+
+            # Filter low quality distance calculation
+            if r > 1.0:
+                result += r
+            else:
+                result += PENALTY
 
     return result
 

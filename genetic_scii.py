@@ -17,7 +17,7 @@ import numpy as np
 
 
 # Evolution parameters
-STEPS = 2001
+STEPS = 801
 POPULATION_NUM = 100
 BEST_NUM = 3
 MUTATION_FACTOR = 1/8
@@ -182,9 +182,9 @@ def select(population, input_arr, score_fun):
     to worst).
     """
     scores = {}
-    for idx, (dna_char, img) in enumerate(population):
+    for idx, (dna, img) in enumerate(population):
         output_arr = np.array(img)
-        result = score_fun(char, input_arr, output_arr)
+        result = score_fun(dna, input_arr, output_arr)
         scores[idx] = result
 
     best_idx = sorted(scores, key=scores.get)[:BEST_NUM]
@@ -217,8 +217,8 @@ def score_shape(dna, input_arr, output_arr):
     _, img1 = cv2.threshold(input_arr, THRESHOLD, NEW_VALUE, 0)
     _, img2 = cv2.threshold(output_arr, THRESHOLD, NEW_VALUE, 0)
 
-    width = img.size[0]//CHAR_SHAPE[1]
-    height = img.size[1]//CHAR_SHAPE[0]
+    width = output_arr.shape[1]//CHAR_SHAPE[1]
+    height = output_arr.shape[1]//CHAR_SHAPE[0]
     result = 0
 
     for x in range(width):
@@ -252,8 +252,9 @@ def score_shape(dna, input_arr, output_arr):
             else:
                 result += PENALTY
 
-            # Judge color
-            np.sum(np.subtract(input_arr, output_arr, dtype=np.int64)**2)
+            # Calculate average color
+            color = np.average(input_arr[begin_y:end_y, begin_x:end_x])
+            result += abs(color - dna[y, x].foreground)
 
     return result
 

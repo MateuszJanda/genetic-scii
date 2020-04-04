@@ -63,7 +63,7 @@ CHAR_SHAPE = singe_char_shape()
 
 
 
-class Char:
+class DnaChar:
     """
     Single char property (symbol, foreground and background). DNA is array
     Chars.
@@ -118,7 +118,7 @@ def basic_population(img_shape):
     bk_color = BLACK
     img = Image.new("L", color=bk_color, size=(img_shape[1], img_shape[0]))
     dna = np.full(shape=(img_shape[0]//CHAR_SHAPE[0], img_shape[1]//CHAR_SHAPE[1]),
-                  fill_value=Char(background=bk_color))
+                  fill_value=DnaChar(background=bk_color))
     population = [(np.copy(dna), copy.copy(img)) for _ in range(POPULATION_NUM)]
     return population
 
@@ -168,10 +168,10 @@ def mutate(population, char_base, mutate_background=True):
 
         for x in range(begin_x, min(begin_x + size_x, width)):
             for y in range(begin_y, min(begin_y + size_y, height)):
-                char = dna[y, x]
-                foreground = (char.foreground + new_foreground)//2
-                background = (char.background + new_background)//2
-                dna[y, x] = Char(symbol, foreground, background)
+                dna_char = dna[y, x]
+                foreground = (dna_char.foreground + new_foreground)//2
+                background = (dna_char.background + new_background)//2
+                dna[y, x] = DnaChar(symbol, foreground, background)
 
                 draw_char(draw, x, y, dna[y, x])
 
@@ -182,9 +182,9 @@ def select(population, input_arr, score_fun):
     to worst).
     """
     scores = {}
-    for idx, (_, img) in enumerate(population):
+    for idx, (dna_char, img) in enumerate(population):
         output_arr = np.array(img)
-        result = score_fun(input_arr, output_arr)
+        result = score_fun(char, input_arr, output_arr)
         scores[idx] = result
 
     best_idx = sorted(scores, key=scores.get)[:BEST_NUM]
@@ -192,14 +192,14 @@ def select(population, input_arr, score_fun):
     return best_idx, scores
 
 
-def score_pixels(input_arr, output_arr):
+def score_pixels(dna, input_arr, output_arr):
     """
     Score pixels differences between two images.
     """
     return np.sum(np.subtract(input_arr, output_arr, dtype=np.int64)**2)
 
 
-def score_shape(input_arr, output_arr):
+def score_shape(dna, input_arr, output_arr):
     """
     Score characters shape differences between two different images (currently
     Hausdorff distance).
@@ -251,6 +251,9 @@ def score_shape(input_arr, output_arr):
                 result += r
             else:
                 result += PENALTY
+
+            # Judge color
+            np.sum(np.subtract(input_arr, output_arr, dtype=np.int64)**2)
 
     return result
 

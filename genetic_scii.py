@@ -85,15 +85,15 @@ def main():
     random.seed(seed)
     np.random.seed(seed)
 
-    orig_arr = get_orig_array("rect.png")
-    population = basic_population(orig_arr.shape)
+    input_arr = get_input_array("rect.png")
+    population = basic_population(input_arr.shape)
 
     counter = 0
     for step in range(STEPS):
         tic = time.time()
 
         mutate(population, CHAR_BASE, mutate_background=False)
-        best_idx, scores = select(population, orig_arr, score_fun=score_shape)
+        best_idx, scores = select(population, input_arr, score_fun=score_shape)
         population = cross(population, best_idx)
 
         if step % 10 == 0:
@@ -123,7 +123,7 @@ def basic_population(img_shape):
     return population
 
 
-def get_orig_array(path="orig.png"):
+def get_input_array(path="orig.png"):
     """
     Get input image (gray scale) as numpy array.
 
@@ -176,14 +176,15 @@ def mutate(population, char_base, mutate_background=True):
                 draw_char(draw, x, y, dna[y, x])
 
 
-def select(population, orig_arr, score_fun):
+def select(population, input_arr, score_fun):
     """
     Score all individuals in population and choose BEST_NUM of them (from best
     to worst).
     """
     scores = {}
     for idx, (_, img) in enumerate(population):
-        result = score_fun(orig_arr, img)
+        output_arr = np.array(img)
+        result = score_fun(input_arr, output_arr)
         scores[idx] = result
 
     best_idx = sorted(scores, key=scores.get)[:BEST_NUM]
@@ -191,14 +192,14 @@ def select(population, orig_arr, score_fun):
     return best_idx, scores
 
 
-def score_pixels(orig_arr, img):
+def score_pixels(input_arr, output_arr):
     """
     Score pixels differences between two images.
     """
-    return np.sum(np.subtract(orig_arr, img, dtype=np.int64)**2)
+    return np.sum(np.subtract(input_arr, output_arr, dtype=np.int64)**2)
 
 
-def score_shape(orig_arr, img):
+def score_shape(input_arr, output_arr):
     """
     Score characters shape differences between two different images (currently
     Hausdorff distance).
@@ -213,8 +214,8 @@ def score_shape(orig_arr, img):
 
     hd = cv2.createHausdorffDistanceExtractor()
 
-    _, img1 = cv2.threshold(orig_arr, THRESHOLD, NEW_VALUE, 0)
-    _, img2 = cv2.threshold(np.array(img), THRESHOLD, NEW_VALUE, 0)
+    _, img1 = cv2.threshold(input_arr, THRESHOLD, NEW_VALUE, 0)
+    _, img2 = cv2.threshold(output_arr, THRESHOLD, NEW_VALUE, 0)
 
     width = img.size[0]//CHAR_SHAPE[1]
     height = img.size[1]//CHAR_SHAPE[0]

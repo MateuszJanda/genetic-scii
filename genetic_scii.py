@@ -87,7 +87,7 @@ def main():
     random.seed(seed)
     np.random.seed(seed)
 
-    input_arr = get_input_array("sincity2.png")
+    input_arr = get_input_array("sincity2.jpg")
     edge_arr = get_edge_array(input_arr)
     population = basic_population(input_arr.shape)
 
@@ -133,8 +133,7 @@ def get_input_array(path):
     ImageMagic - convert to gray scale image:
     convert rectangle.png  -fx 'intensity/8' rect.png
     """
-    img = cv2.imread(path)
-    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray_img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
 
     return gray_img
 
@@ -157,6 +156,10 @@ def get_edge_array(gray_arr):
     abs_grad_y = cv2.convertScaleAbs(grad_y)
 
     grad = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
+
+    THRESHOLD = 50
+    MAX_VALUE = 255
+    _, grad = cv2.threshold(grad, THRESHOLD, MAX_VALUE, cv2.THRESH_BINARY)
 
     return grad
 

@@ -6,6 +6,7 @@ Site: github.com/MateuszJanda
 Ad maiorem Dei gloriam
 """
 
+import os
 import random
 import time
 import copy
@@ -42,7 +43,7 @@ BLACK = 0
 WHITE = 255
 
 # FONT_NAME = 'DejaVuSansMono'
-FONT_NAME = os.path.abspath('~/.fonts/truetype/fixed-sys-excelsior/FSEX300.ttf')
+FONT_NAME = os.path.expanduser('~/.fonts/truetype/fixed-sys-excelsior/FSEX300.ttf')
 FONT_SIZE = 16
 FONT_SPACING = 0
 FONT = ImageFont.truetype(FONT_NAME, size=FONT_SIZE)
@@ -94,7 +95,7 @@ def main():
     for step in range(STEPS):
         tic = time.time()
 
-        mutate(population, CHAR_BASE, mutate_background=False)
+        mutate(population, CHAR_BASE, mutate_fg_color=True, mutate_bg_color=False)
         best_idx, scores = select(population, input_arr, edge_arr, score_fun=score_shape)
         population = cross(population, best_idx)
 
@@ -133,7 +134,7 @@ def get_input_array(path):
     convert rectangle.png  -fx 'intensity/8' rect.png
     """
     img = cv2.imread(path)
-    gray_img = cv2.cvtColor(img, cv.COLOR_GRAY2BGR)
+    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     return gray_img
 
@@ -153,14 +154,14 @@ def get_edge_array(gray_arr):
     grad_y = cv2.Sobel(gray_arr, ddepth, 0, 1, ksize=3, scale=scale, delta=delta, borderType=cv2.BORDER_DEFAULT)
 
     abs_grad_x = cv2.convertScaleAbs(grad_x)
-    abs_grad_y = c2v.convertScaleAbs(grad_y)
+    abs_grad_y = cv2.convertScaleAbs(grad_y)
 
     grad = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
 
     return grad
 
 
-def mutate(population, char_base, muate_fg_color=True, mutate_bg_color=True):
+def mutate(population, char_base, mutate_fg_color=True, mutate_bg_color=True):
     """
     Mutate - add random "rectangle" to each individual in population. Could be
     tuned by MUTATION_FACTOR.

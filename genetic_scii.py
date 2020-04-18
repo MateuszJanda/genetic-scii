@@ -34,14 +34,15 @@ CHAR_BASE_BLOCK     = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
 CHAR_BASE_NOT_ALPHA = string.punctuation + CHAR_BASE_BOX + CHAR_BASE_BLOCK
 CHAR_BASE_PUNCT_BOX = string.punctuation + CHAR_BASE_BOX
 
-CHAR_BASE = CHAR_BASE_PUNCT_BOX
+CHAR_BASE = CHAR_BASE_PUNCT_BOX + CHAR_BASE_BLOCK
 
 
 # Image and font configuration
 BLACK = 0
 WHITE = 255
 
-FONT_NAME = 'DejaVuSansMono'
+# FONT_NAME = 'DejaVuSansMono'
+FONT_NAME = os.path.abspath('~/.fonts/truetype/fixed-sys-excelsior/FSEX300.ttf')
 FONT_SIZE = 16
 FONT_SPACING = 0
 FONT = ImageFont.truetype(FONT_NAME, size=FONT_SIZE)
@@ -85,7 +86,8 @@ def main():
     random.seed(seed)
     np.random.seed(seed)
 
-    input_arr = get_input_array("rect.png")
+    input_arr = get_input_array("sincity2.png")
+    edge_arr = get_edge_array(input_arr)
     population = basic_population(input_arr.shape)
 
     counter = 0
@@ -93,7 +95,7 @@ def main():
         tic = time.time()
 
         mutate(population, CHAR_BASE, mutate_background=False)
-        best_idx, scores = select(population, input_arr, score_fun=score_shape)
+        best_idx, scores = select(population, input_arr, edge_arr, score_fun=score_shape)
         population = cross(population, best_idx)
 
         if step % 10 == 0:
@@ -123,28 +125,42 @@ def basic_population(img_shape):
     return population
 
 
-def get_input_array(path="orig.png"):
+def get_input_array(path):
     """
     Get input image (gray scale) as numpy array.
 
     ImageMagic - convert to gray scale image:
     convert rectangle.png  -fx 'intensity/8' rect.png
     """
-    img = Image.open(path)
+    img = cv2.imread(path)
+    gray_img = cv2.cvtColor(img, cv.COLOR_GRAY2BGR)
 
-    assert img.mode == "L", "Gray scale (8-bit) image required"
-
-    return np.array(img)
+    return gray_img
 
 
-def convert_to_contours(arr):
+def get_edge_array(gray_arr):
     """
+    Get gray scale (numpy array) image of detected edges.
+
+    Reference:
     https://docs.opencv.org/master/d2/d2c/tutorial_sobel_derivatives.html
     """
-    pass
+    scale = 1
+    delta = 0
+    ddepth = cv2.CV_16S
+
+    grad_x = cv2.Sobel(gray_arr, ddepth, 1, 0, ksize=3, scale=scale, delta=delta, borderType=cv2.BORDER_DEFAULT)
+    grad_y = cv2.Sobel(gray_arr, ddepth, 0, 1, ksize=3, scale=scale, delta=delta, borderType=cv2.BORDER_DEFAULT)
+
+    abs_grad_x = cv2.convertScaleAbs(grad_x)
+    abs_grad_y = c2v.convertScaleAbs(grad_y)
+
+    grad = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
+
+    return grad
 
 
-def mutate(population, char_base, mutate_background=True):
+def mutate(population, char_base, muate_fg_color=True, mutate_bg_color=True):
     """
     Mutate - add random "rectangle" to each individual in population. Could be
     tuned by MUTATION_FACTOR.
@@ -158,11 +174,13 @@ def mutate(population, char_base, mutate_background=True):
         size_y = int(random.randint(1, height) * MUTATION_FACTOR)
 
         symbol = random.choice(char_base)
-        new_foreground = random.randint(0, 255)
-        if mutate_background:
+        new_background = 0
+        new_foreground = 0
+        if mutate_fg_color:
+            new_foreground = random.randint(0, 255)
+
+        if mutate_bg_color:
             new_background = random.randint(0, 255)
-        else:
-            new_background = 0
 
         draw = ImageDraw.Draw(img)
 
@@ -176,7 +194,7 @@ def mutate(population, char_base, mutate_background=True):
                 draw_char(draw, x, y, dna[y, x])
 
 
-def select(population, input_arr, score_fun):
+def select(population, input_arr, edge_arr, score_fun):
     """
     Score all individuals in population and choose BEST_NUM of them (from best
     to worst).
@@ -184,7 +202,7 @@ def select(population, input_arr, score_fun):
     scores = {}
     for idx, (dna, img) in enumerate(population):
         output_arr = np.array(img)
-        result = score_fun(dna, input_arr, output_arr)
+        result = score_fun(dna, input_arr, edge_arr, output_arr)
         scores[idx] = result
 
     best_idx = sorted(scores, key=scores.get)[:BEST_NUM]
@@ -192,14 +210,14 @@ def select(population, input_arr, score_fun):
     return best_idx, scores
 
 
-def score_pixels(dna, input_arr, output_arr):
+def score_pixels(dna, input_arr, edge_arr, output_arr):
     """
     Score pixels differences between two images.
     """
     return np.sum(np.subtract(input_arr, output_arr, dtype=np.int64)**2)
 
 
-def score_shape(dna, input_arr, output_arr):
+def score_shape(dna, input_arr, edge_arr, output_arr):
     """
     Score characters shape differences between two different images (currently
     Hausdorff distance).
@@ -209,13 +227,8 @@ def score_shape(dna, input_arr, output_arr):
     https://answers.opencv.org/question/60974/matching-shapes-with-hausdorff-and-shape-context-distance/
     """
     PENALTY = 1000
-    THRESHOLD = 20
-    NEW_VALUE = 255
 
     hd = cv2.createHausdorffDistanceExtractor()
-
-    _, img1 = cv2.threshold(input_arr, THRESHOLD, NEW_VALUE, 0)
-    _, img2 = cv2.threshold(output_arr, THRESHOLD, NEW_VALUE, 0)
 
     width = output_arr.shape[1]//CHAR_SHAPE[1]
     height = output_arr.shape[1]//CHAR_SHAPE[0]
@@ -228,17 +241,17 @@ def score_shape(dna, input_arr, output_arr):
             end_x = begin_x + CHAR_SHAPE[1]
             end_y = begin_y + CHAR_SHAPE[0]
 
-            # When there is no shape (only background) continue
-            if not np.any(img1[begin_y:end_y, begin_x:end_x]):
-                if np.any(img2[begin_y:end_y, begin_x:end_x]):
+            # When there is no shape (black only background) continue
+            if not np.any(input_arr[begin_y:end_y, begin_x:end_x]):
+                if np.any(output_arr[begin_y:end_y, begin_x:end_x]):
                     result += PENALTY
                 continue
 
-            contours1, _ = cv2.findContours(img1[begin_y:end_y, begin_x:end_x], cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+            contours1, _ = cv2.findContours(input_arr[begin_y:end_y, begin_x:end_x], cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
             if not contours1:
                 continue
 
-            contours2, _ = cv2.findContours(img2[begin_y:end_y, begin_x:end_x], cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+            contours2, _ = cv2.findContours(output_arr[begin_y:end_y, begin_x:end_x], cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
             # Penalty when missing shape proposal
             if not contours2:
                 result += PENALTY
@@ -255,6 +268,59 @@ def score_shape(dna, input_arr, output_arr):
             # Calculate average color
             color = np.average(input_arr[begin_y:end_y, begin_x:end_x])
             result += abs(color - dna[y, x].foreground)
+
+    return result
+
+
+def score_edge_and_pixels(dna, input_arr, edge_arr, output_arr):
+    """
+    Score edge in first place, if there is no edges score pixels.
+    """
+    PENALTY = 1000
+
+    hd = cv2.createHausdorffDistanceExtractor()
+
+    width = output_arr.shape[1]//CHAR_SHAPE[1]
+    height = output_arr.shape[1]//CHAR_SHAPE[0]
+    result = 0
+
+    for x in range(width):
+        for y in range(height):
+            begin_x = x*CHAR_SHAPE[1]
+            begin_y = y*CHAR_SHAPE[0]
+            end_x = begin_x + CHAR_SHAPE[1]
+            end_y = begin_y + CHAR_SHAPE[0]
+
+            # When there is no shape (black only background) continue
+            if not np.any(input_arr[begin_y:end_y, begin_x:end_x]):
+                if np.any(output_arr[begin_y:end_y, begin_x:end_x]):
+                    result += PENALTY
+                continue
+
+            if np.any(edge_arr[begin_y:end_y, begin_x:end_x]):
+                contours1, _ = cv2.findContours(input_arr[begin_y:end_y, begin_x:end_x], cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+                if not contours1:
+                    continue
+
+                contours2, _ = cv2.findContours(output_arr[begin_y:end_y, begin_x:end_x], cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+                # Penalty when missing shape proposal
+                if not contours2:
+                    result += PENALTY
+                    continue
+
+                r = hd.computeDistance(contours1[0], contours2[0])
+
+                # Filter low quality distance calculation
+                if r > 1.0:
+                    result += r
+                else:
+                    result += PENALTY
+
+                # Calculate average color
+                color = np.average(input_arr[begin_y:end_y, begin_x:end_x])
+                result += abs(color - dna[y, x].foreground)
+            else:
+                result += np.sum(np.abs(np.subtract(input_arrbegin_y:end_y, begin_x:end_x], output_arrbegin_y:end_y, begin_x:end_x)))
 
     return result
 

@@ -320,7 +320,7 @@ def score_edge_and_pixels(dna, input_arr, edge_arr, output_arr):
                 color = np.average(input_arr[begin_y:end_y, begin_x:end_x])
                 result += abs(color - dna[y, x].foreground)
             else:
-                result += np.sum(np.abs(np.subtract(input_arrbegin_y:end_y, begin_x:end_x], output_arrbegin_y:end_y, begin_x:end_x)))
+                result += np.sum(np.abs(np.subtract(input_arr[begin_y:end_y, begin_x:end_x], output_arr[begin_y:end_y, begin_x:end_x])))
 
     return result
 

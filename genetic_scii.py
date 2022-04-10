@@ -78,7 +78,7 @@ class DnaChar:
 
 def main():
     """
-    Three step genetic algorithm:
+    Three steps of genetic algorithm:
     - mutate last population
     - select (score) best individuals
     - cross best individuals
@@ -87,7 +87,7 @@ def main():
     random.seed(seed)
     np.random.seed(seed)
 
-    input_arr = get_input_array("sincity2.jpg")
+    input_arr = get_input_array("sincity1.jpg")
     edge_arr = get_edge_array(input_arr)
     population = basic_population(input_arr.shape)
 
@@ -130,8 +130,8 @@ def get_input_array(path):
     """
     Get input image (gray scale) as numpy array.
 
-    ImageMagic - convert to gray scale image:
-    convert rectangle.png  -fx 'intensity/8' rect.png
+    In ImageMagic this could look like this:
+    convert input.png  -fx 'intensity/8' output.png
     """
     gray_img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
 

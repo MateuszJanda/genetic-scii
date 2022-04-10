@@ -18,7 +18,7 @@ import numpy as np
 
 
 # Evolution parameters
-STEPS = 801
+STEPS = 800
 POPULATION_NUM = 100
 BEST_NUM = 3
 MUTATION_FACTOR = 1/8
@@ -92,7 +92,7 @@ def main():
     population = basic_population(input_arr.shape)
 
     counter = 0
-    for step in range(STEPS):
+    for step in range(STEPS + 1):
         tic = time.time()
 
         mutate(population, CHAR_BASE, mutate_fg_color=True, mutate_bg_color=False)
@@ -123,6 +123,12 @@ def basic_population(img_shape):
     dna = np.full(shape=(img_shape[0]//CHAR_SHAPE[0], img_shape[1]//CHAR_SHAPE[1]),
                   fill_value=DnaChar(background=bk_color))
     population = [(np.copy(dna), copy.copy(img)) for _ in range(POPULATION_NUM)]
+
+    print(f"Input image resolution: {img_shape[1]}x{img_shape[0]}")
+    print(f"ASCII resolution: {dna.shape[1]}x{dna.shape[0]}")
+    print(f"Need chars: {dna.shape[1] * dna.shape[0]}")
+    print(f"Available chars: {len(CHAR_BASE)}\n")
+
     return population
 
 

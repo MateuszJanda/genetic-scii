@@ -330,7 +330,7 @@ def score_edge_and_pixels(dna, input_arr, edge_arr, output_arr):
 
 
 def cross(population, best_idx):
-    """f
+    """
     Cross individuals in population (preview called select method should narrow
     this to BEST_NUM individuals). Copy random rectangle/matrix from one
     individual and merge it with second individual.

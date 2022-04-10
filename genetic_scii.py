@@ -35,9 +35,6 @@ CHAR_BASE_BLOCK     = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
 CHAR_BASE_NOT_ALPHA = string.punctuation + CHAR_BASE_BOX + CHAR_BASE_BLOCK
 CHAR_BASE_PUNCT_BOX = string.punctuation + CHAR_BASE_BOX
 
-CHAR_BASE = CHAR_BASE_PUNCT_BOX + CHAR_BASE_BLOCK
-
-
 # Image and font configuration
 BLACK = 0
 WHITE = 255
@@ -90,12 +87,13 @@ def main():
     input_arr = get_input_array("sincity1.jpg")
     edge_arr = get_edge_array(input_arr)
     population = basic_population(input_arr.shape)
+    char_base = create_char_base(input_arr.shape, population[0][0])
 
     counter = 0
     for step in range(STEPS + 1):
         tic = time.time()
 
-        mutate(population, CHAR_BASE, mutate_fg_color=True, mutate_bg_color=False)
+        mutate(population, char_base, mutate_fg_color=True, mutate_bg_color=True)
         best_idx, scores = select(population, input_arr, edge_arr, score_fun=score_shape)
         population = cross(population, best_idx)
 
@@ -124,12 +122,25 @@ def basic_population(img_shape):
                   fill_value=DnaChar(background=bk_color))
     population = [(np.copy(dna), copy.copy(img)) for _ in range(POPULATION_NUM)]
 
+    return population
+
+
+def create_char_base(img_shape, dna):
+    """
+    Create char base.
+    """
     print(f"Input image resolution: {img_shape[1]}x{img_shape[0]}")
     print(f"ASCII resolution: {dna.shape[1]}x{dna.shape[0]}")
-    print(f"Need chars: {dna.shape[1] * dna.shape[0]}")
-    print(f"Available chars: {len(CHAR_BASE)}\n")
+    print(f"Needed chars: {dna.shape[1] * dna.shape[0]}")
 
-    return population
+    char_base = list(CHAR_BASE_PUNCT_BOX + CHAR_BASE_BLOCK)
+    print(f"Available chars: {len(char_base)}\n")
+
+    current_num = len(char_base)
+    min_num = dna.shape[1] * dna.shape[0]
+    char_base.extend(" " * (min_num - current_num))
+
+    return char_base
 
 
 def get_input_array(path):

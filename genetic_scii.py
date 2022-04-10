@@ -133,12 +133,16 @@ def create_char_base(img_shape, dna):
     print(f"ASCII resolution: {dna.shape[1]}x{dna.shape[0]}")
     print(f"Needed chars: {dna.shape[1] * dna.shape[0]}")
 
-    char_base = list(CHAR_BASE_PUNCT_BOX + CHAR_BASE_BLOCK)
+    # char_base = list(CHAR_BASE_PUNCT_BOX + CHAR_BASE_BLOCK)
+    char_base = []
+    char_base.extend("█" * 10)
+    char_base.extend("▄" * 15)
+
     print(f"Available chars: {len(char_base)}\n")
 
     current_num = len(char_base)
     min_num = dna.shape[1] * dna.shape[0]
-    char_base.extend(" " * (min_num - current_num))
+    char_base.extend(CHAR_BASE_SPACE * (min_num - current_num))
 
     return char_base
 
@@ -186,9 +190,11 @@ def mutate(population, char_base, mutate_fg_color=True, mutate_bg_color=True):
     Mutate - add random "rectangle" to each individual in population. Could be
     tuned by MUTATION_FACTOR.
     """
+    img = population[0][1]
+    width = img.size[0]//CHAR_SHAPE[1]
+    height = img.size[1]//CHAR_SHAPE[0]
+
     for dna, img in population:
-        width = img.size[0]//CHAR_SHAPE[1]
-        height = img.size[1]//CHAR_SHAPE[0]
         begin_x = random.randint(0, width - 1)
         begin_y = random.randint(0, height - 1)
         size_x = int(random.randint(1, width) * MUTATION_FACTOR)

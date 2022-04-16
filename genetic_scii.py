@@ -75,6 +75,8 @@ class DnaChar:
 
 def main():
     """
+    Tested on image with resoultion: 371x480
+
     Three steps of genetic algorithm:
     - mutate last population
     - select (score) best individuals

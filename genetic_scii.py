@@ -25,6 +25,7 @@ POPULATION_NUM = 100
 BEST_NUM = 3
 MUTATION_FACTOR = 1/8
 CROSS_NUM = 2
+SNAPSHOT_STEP = 10
 
 
 # Different unicode chars sets used to generate final image
@@ -103,7 +104,7 @@ def main():
         best_idx, scores = select(population, input_arr, edge_arr, score_fun=score_shape)
         population = cross(population, best_idx)
 
-        if step % 10 == 0:
+        if step % SNAPSHOT_STEP == 0:
             save_dna_as_img(population, best_idx[0], counter)
             counter += 1
 
@@ -119,10 +120,11 @@ def create_char_base(dna):
     """
     Create char base.
     """
+    FACTOR = 4
     char_base = Counter()
-    char_base.update(string.punctuation * 4)
+    char_base.update(string.punctuation * FACTOR)
 
-    current_num = len(char_base)
+    current_num = len(''.join([ch * count for (ch, count) in char_base.items()]))
     min_num = dna.shape[1] * dna.shape[0]
     char_base.update(CHAR_BASE_SPACE * (min_num - current_num))
 
@@ -144,11 +146,11 @@ def basic_population(img_shape):
 
     population = [Individual(np.copy(dna), copy.copy(img), copy.copy(char_base)) for _ in range(POPULATION_NUM)]
 
-    p = population[0]
-    print(f"Available chars: {len(char_base)}\n")
+    individual = population[0]
     print(f"Input image resolution: {img_shape[1]}x{img_shape[0]}")
-    print(f"ASCII resolution: {p.dna.shape[1]}x{p.dna.shape[0]}")
-    print(f"Needed chars: {p.dna.shape[1] * p.dna.shape[0]}")
+    print(f"ASCII resolution: {individual.dna.shape[1]}x{individual.dna.shape[0]}")
+    print(f"Needed chars: {individual.dna.shape[1] * individual.dna.shape[0]}")
+    print(f"Available chars: {len(''.join([ch * count for (ch, count) in char_base.items()]))}\n")
 
     return population
 

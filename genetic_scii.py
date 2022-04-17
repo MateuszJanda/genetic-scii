@@ -108,18 +108,18 @@ def main():
         tic = time.time()
 
         mutate(population, mutate_fg_color=True, mutate_bg_color=True)
-        best_idx, scores = select(population, input_arr, edge_arr, score_fun=score_pixels)
-        population = cross(population, best_idx)
+        best_indices, scores = select(population, input_arr, edge_arr, score_fun=score_pixels)
+        population = cross(population, best_indices)
 
         if step % SNAPSHOT_STEP == 0:
-            save_dna_as_img(population, best_idx[0], counter)
+            save_dna_as_img(population, best_indices[0], counter)
             counter += 1
 
         print("Generation: {step}, time: {t:.12f}, best: {best}, diff: {diff}"
-            .format(step=step, t=time.time() - tic, best=scores[best_idx[0]],
-                diff=scores[best_idx[-1]] - scores[best_idx[0]]))
+            .format(step=step, t=time.time() - tic, best=scores[best_indices[0]],
+                diff=scores[best_indices[-1]] - scores[best_indices[0]]))
 
-    save_dna_as_img(population, best_idx[0], counter)
+    save_dna_as_img(population, best_indices[0], counter)
     print("End")
 
 
@@ -310,9 +310,9 @@ def select(population, input_arr, edge_arr, score_fun):
     #     scores = executor.map(score_fun, population, input_arrs, edge_arrs)
     #     scores = list(scores)
 
-    best_idx = sorted(range(len(scores)), key=lambda k: scores[k])[:BEST_NUM]
+    best_indices = sorted(range(len(scores)), key=lambda k: scores[k])[:BEST_NUM]
 
-    return best_idx, scores
+    return best_indices, scores
 
 
 def score_pixels(individual, input_arr, edge_arr):
@@ -433,17 +433,17 @@ def score_edge_and_pixels(dna, input_arr, edge_arr, output_arr):
     return result
 
 
-def cross(population, best_idx):
+def cross(population, best_indices):
     """
     Cross individuals in population (preview called select method should narrow
     this to BEST_NUM individuals). Copy random rectangle/matrix from one
     individual and merge it with second individual.
     """
-    best_specimens = [copy.deepcopy(population[idx]) for idx in best_idx]
+    best_individuals = [copy.deepcopy(population[idx]) for idx in best_indices]
 
     result = []
     for _ in range(len(population)):
-        individual1, individual2 = random.sample(best_specimens, 2)
+        individual1, individual2 = random.sample(best_individuals, 2)
         dna = np.copy(individual1.dna)
         img = copy.copy(individual1.img)
         char_base = copy.copy(individual1.char_base)

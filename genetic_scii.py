@@ -449,14 +449,14 @@ def cross(population, best_idx):
         char_base = copy.copy(individual1.char_base)
 
         for _ in range(CROSS_NUM):
-            y = np.random.randint(dna.shape[0] - 1)
-            x = np.random.randint(dna.shape[1] - 1)
-            end_y = np.random.randint(y + 1, dna.shape[0])
-            end_x = np.random.randint(x + 1, dna.shape[1])
+            begin_y = np.random.randint(dna.shape[0] - 1)
+            begin_x = np.random.randint(dna.shape[1] - 1)
+            end_y = np.random.randint(begin_y + 1, dna.shape[0])
+            end_x = np.random.randint(begin_x + 1, dna.shape[1])
 
-            dna[y:end_y, x:end_x] = individual2.dna[y:end_y, x:end_x]
-            c = individual2.img.crop(box=(x*CHAR_SHAPE[1], y*CHAR_SHAPE[0], end_x*CHAR_SHAPE[1], end_y*CHAR_SHAPE[0]))
-            img.paste(c, box=(x*CHAR_SHAPE[1], y*CHAR_SHAPE[0]))
+            dna[begin_y:end_y, begin_x:end_x] = individual2.dna[begin_y:end_y, begin_x:end_x]
+            cut = individual2.img.crop(box=(begin_x*CHAR_SHAPE[1], begin_y*CHAR_SHAPE[0], end_x*CHAR_SHAPE[1], end_y*CHAR_SHAPE[0]))
+            img.paste(cut, box=(begin_x*CHAR_SHAPE[1], begin_y*CHAR_SHAPE[0]))
 
         result.append(Individual(dna, img, individual1.char_base, individual1.foreground, individual1.background))
 

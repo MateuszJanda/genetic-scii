@@ -133,7 +133,7 @@ def create_char_base(dna):
     char_base.update(CHAR_BASE_BOX * FACTOR)
     char_base.update(CHAR_BASE_GEOMETRIC * FACTOR)
 
-    current_num = len([ch for (ch, count) in char_base.items() for _ in range(count)])
+    current_num = len(list(char_base.elements()))
     print(f"Char in base: {current_num}")
 
     min_num = dna.shape[1] * dna.shape[0]
@@ -149,13 +149,13 @@ def create_color_palette(dna):
     FACTOR = 2
 
     foregrounds = Counter([color for color in range(128, 256)] * FACTOR)
-    foregrounds_num = len([ch for (ch, count) in foregrounds.items() for _ in range(count)])
+    foregrounds_num = len(list(foregrounds.elements()))
     print(f"Foregrounds colors in base: {foregrounds_num}")
     min_num = dna.shape[1] * dna.shape[0]
     foregrounds.update([0] * (min_num - foregrounds_num))
 
     backgrounds = Counter([color for color in range(128, 256)] * FACTOR)
-    backgrounds_num = len([ch for (ch, count) in backgrounds.items() for _ in range(count)])
+    backgrounds_num = len(list(backgrounds.elements()))
     print(f"Backgrounds colors in base: {backgrounds_num}")
     min_num = dna.shape[1] * dna.shape[0]
     backgrounds.update([0] * (min_num - backgrounds_num))
@@ -263,13 +263,12 @@ def fff1(individual, mutate_fg_color=True, mutate_bg_color=True):
     surface_size = size_x * size_y
 
     # Return symbols to char_base
-    available_chars = [ch * count for (ch, count) in individual.char_base.items()]
     for x in range(begin_x, begin_x + size_x):
         for y in range(begin_y, begin_y + size_y):
-            available_chars += individual.dna[y, x].symbol
+            individual.char_base += individual.dna[y, x].symbol
 
     # Choice random symbol, foreground and background color
-    symbols = random.choices("".join(available_chars), k=surface_size)
+    new_symbols = random.choices(list(individual.char_base.elements()), k=surface_size)
     new_background = 0
     new_foreground = 0
     if mutate_fg_color:
@@ -287,7 +286,8 @@ def fff1(individual, mutate_fg_color=True, mutate_bg_color=True):
             background = (dna_char.background + new_background)//2
 
             idx = (y - begin_y) * size_x + (x - begin_x)
-            individual.dna[y, x] = DnaChar(symbols[idx], foreground, background)
+            individual.dna[y, x] = DnaChar(new_symbols[idx], foreground, background)
+            individual.char_base.substrac(new_symbols[idx])
 
             draw_char(draw, x, y, individual.dna[y, x])
 

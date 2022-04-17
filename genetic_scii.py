@@ -57,7 +57,7 @@ FONT_SPACING = 0
 FONT = ImageFont.truetype(FONT_NAME, size=FONT_SIZE)
 
 
-Individual = namedtuple("Individual", ["dna", "img", "char_base"])
+Individual = namedtuple("Individual", ["dna", "img", "char_base", "foreground", "background"])
 
 
 def singe_char_shape():
@@ -75,7 +75,6 @@ def singe_char_shape():
 CHAR_SHAPE = singe_char_shape()
 
 
-
 class DnaChar:
     """
     Single char property (symbol, foreground and background). DNA is array
@@ -89,14 +88,14 @@ class DnaChar:
 
 def main():
     """
-    Tested on image with resoultion: 371x480
-
     Three steps of genetic algorithm:
     - mutate last population
     - select (score) best individuals
     - cross best individuals
+
+    Tested on image with resoultion: 371x480
     """
-    seed = 3
+    seed = 1337
     random.seed(seed)
     np.random.seed(seed)
 
@@ -134,13 +133,34 @@ def create_char_base(dna):
     char_base.update(CHAR_BASE_BOX * FACTOR)
     char_base.update(CHAR_BASE_GEOMETRIC * FACTOR)
 
-    current_num = len("".join([ch * count for (ch, count) in char_base.items()]))
+    current_num = len([ch for (ch, count) in char_base.items() for _ in range(count)])
     print(f"Char in base: {current_num}")
 
     min_num = dna.shape[1] * dna.shape[0]
     char_base.update(CHAR_BASE_SPACE * (min_num - current_num))
 
     return char_base
+
+
+def create_color_palette(dna):
+    """
+    Create color palette.
+    """
+    FACTOR = 2
+
+    foregrounds = Counter([color for color in range(128, 256)] * FACTOR)
+    foregrounds_num = len([ch for (ch, count) in foregrounds.items() for _ in range(count)])
+    print(f"Foregrounds colors in base: {foregrounds_num}")
+    min_num = dna.shape[1] * dna.shape[0]
+    foregrounds.update([0] * (min_num - foregrounds_num))
+
+    backgrounds = Counter([color for color in range(128, 256)] * FACTOR)
+    backgrounds_num = len([ch for (ch, count) in backgrounds.items() for _ in range(count)])
+    print(f"Backgrounds colors in base: {backgrounds_num}")
+    min_num = dna.shape[1] * dna.shape[0]
+    backgrounds.update([0] * (min_num - backgrounds_num))
+
+    return foregrounds, backgrounds
 
 
 def basic_population(img_shape):
@@ -155,8 +175,10 @@ def basic_population(img_shape):
     dna = np.full(shape=(img_shape[0]//CHAR_SHAPE[0], img_shape[1]//CHAR_SHAPE[1]),
                   fill_value=DnaChar(background=bk_color))
     char_base = create_char_base(dna)
+    foregrounds, backgrounds = create_color_palette(dna)
 
-    population = [Individual(np.copy(dna), copy.copy(img), copy.copy(char_base)) for _ in range(POPULATION_NUM)]
+    population = [Individual(np.copy(dna), copy.copy(img), copy.copy(char_base), \
+        copy.copy(foregrounds), copy.copy(backgrounds)) for _ in range(POPULATION_NUM)]
 
     individual = population[0]
     print(f"Input image resolution: {img_shape[1]}x{img_shape[0]}")
@@ -436,7 +458,7 @@ def cross(population, best_idx):
             c = individual2.img.crop(box=(x*CHAR_SHAPE[1], y*CHAR_SHAPE[0], end_x*CHAR_SHAPE[1], end_y*CHAR_SHAPE[0]))
             img.paste(c, box=(x*CHAR_SHAPE[1], y*CHAR_SHAPE[0]))
 
-        result.append(Individual(dna, img, char_base))
+        result.append(Individual(dna, img, individual1.char_base, individual1.foreground, individual1.background))
 
     return result
 

@@ -31,10 +31,16 @@ SNAPSHOT_STEP = 10
 # Different unicode chars sets used to generate final image
 CHAR_BASE_SPACE     = " "
 CHAR_BASE_ASCII     = string.digits + string.ascii_letters + string.punctuation
+
 # https://en.wikipedia.org/wiki/Box_Drawing_(Unicode_block)
 CHAR_BASE_BOX       = "".join([chr(ch) for ch in range(0x2500, 0x257F+1)])
+
 # https://en.wikipedia.org/wiki/Block_Elements
 CHAR_BASE_BLOCK     = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
+
+# https://en.wikipedia.org/wiki/Geometric_Shapes_(Unicode_block)
+CHAR_BASE_GEOMETRIC = "".join([chr(ch) for ch in range(0x25A0, 0x25FF+1)])
+
 CHAR_BASE_NOT_ALPHA = string.punctuation + CHAR_BASE_BOX + CHAR_BASE_BLOCK
 CHAR_BASE_PUNCT_BOX = string.punctuation + CHAR_BASE_BOX
 
@@ -42,14 +48,14 @@ CHAR_BASE_PUNCT_BOX = string.punctuation + CHAR_BASE_BOX
 BLACK = 0
 WHITE = 255
 
-# FONT_NAME = 'DejaVuSansMono'
-FONT_NAME = os.path.expanduser('~/.fonts/truetype/fixed-sys-excelsior/FSEX300.ttf')
+# FONT_NAME = "DejaVuSansMono"
+FONT_NAME = os.path.expanduser("~/.fonts/truetype/fixed-sys-excelsior/FSEX300.ttf")
 FONT_SIZE = 16
 FONT_SPACING = 0
 FONT = ImageFont.truetype(FONT_NAME, size=FONT_SIZE)
 
 
-Individual = namedtuple('Individual', ['dna', 'img', 'char_base'])
+Individual = namedtuple("Individual", ["dna", "img", "char_base"])
 
 
 def singe_char_shape():
@@ -120,11 +126,15 @@ def create_char_base(dna):
     """
     Create char base.
     """
-    FACTOR = 4
+    FACTOR = 2
     char_base = Counter()
-    char_base.update(string.punctuation * FACTOR)
+    char_base.update(CHAR_BASE_BLOCK * FACTOR)
+    char_base.update(CHAR_BASE_BOX * FACTOR)
+    char_base.update(CHAR_BASE_GEOMETRIC * FACTOR)
 
-    current_num = len(''.join([ch * count for (ch, count) in char_base.items()]))
+    current_num = len("".join([ch * count for (ch, count) in char_base.items()]))
+    print(f"Char in base: {current_num}")
+
     min_num = dna.shape[1] * dna.shape[0]
     char_base.update(CHAR_BASE_SPACE * (min_num - current_num))
 
@@ -222,7 +232,7 @@ def mutate(population, mutate_fg_color=True, mutate_bg_color=True):
                 available_chars += individual.dna[y, x].symbol
 
         # Choice random symbol, foreground and background color
-        symbols = random.choices(''.join(available_chars), k=surface_size)
+        symbols = random.choices("".join(available_chars), k=surface_size)
         new_background = 0
         new_foreground = 0
         if mutate_fg_color:
@@ -472,5 +482,5 @@ def draw_char(draw, x, y, char):
     draw.text(xy=(pos_x, pos_y), text=char.symbol, fill=char.foreground, font=FONT, spacing=FONT_SPACING)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

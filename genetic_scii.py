@@ -12,10 +12,12 @@ import time
 import copy
 import string
 import pickle
+import itertools
 from collections import namedtuple
 from collections import Counter
 from PIL import Image, ImageDraw, ImageFont
 import cv2
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 import numpy as np
 
 
@@ -107,7 +109,7 @@ def main():
         tic = time.time()
 
         mutate(population, mutate_fg_color=True, mutate_bg_color=True)
-        best_idx, scores = select(population, input_arr, edge_arr, score_fun=score_shape)
+        best_idx, scores = select(population, input_arr, edge_arr, score_fun=score_pixels)
         population = cross(population, best_idx)
 
         if step % SNAPSHOT_STEP == 0:
@@ -208,51 +210,66 @@ def mutate(population, mutate_fg_color=True, mutate_bg_color=True):
     Mutate - add random "rectangle" to each individual in population. Could be
     tuned by MUTATION_FACTOR.
     """
-    width = population[0].img.size[0]//CHAR_SHAPE[1]
-    height = population[0].img.size[1]//CHAR_SHAPE[0]
 
+    out = []
+
+    # with ProcessPoolExecutor() as executor:
+    # with ThreadPoolExecutor() as executor:
     for individual in population:
-        # Randomize the location
-        begin_x = random.randint(0, width - 1)
-        begin_y = random.randint(0, height - 1)
-        size_x = int(random.randint(1, width) * MUTATION_FACTOR)
-        size_y = int(random.randint(1, height) * MUTATION_FACTOR)
+        out.append(fff1(individual))
+        # out = executor.map(fff1, population)
 
-        if begin_x + size_x > width:
-            size_x = width - begin_x
-        if begin_y + size_y > height:
-            size_y = height - begin_y
+    population = out
 
-        surface_size = size_x * size_y
 
-        # Return symbols to char_base
-        available_chars = [ch * count for (ch, count) in individual.char_base.items()]
-        for x in range(begin_x, begin_x + size_x):
-            for y in range(begin_y, begin_y + size_y):
-                available_chars += individual.dna[y, x].symbol
 
-        # Choice random symbol, foreground and background color
-        symbols = random.choices("".join(available_chars), k=surface_size)
-        new_background = 0
-        new_foreground = 0
-        if mutate_fg_color:
-            new_foreground = random.randint(0, 255)
+def fff1(individual, mutate_fg_color=True, mutate_bg_color=True):
+    width = individual.img.size[0]//CHAR_SHAPE[1]
+    height = individual.img.size[1]//CHAR_SHAPE[0]
 
-        if mutate_bg_color:
-            new_background = random.randint(0, 255)
+    # Randomize the location
+    begin_x = random.randint(0, width - 1)
+    begin_y = random.randint(0, height - 1)
+    size_x = int(random.randint(1, width) * MUTATION_FACTOR)
+    size_y = int(random.randint(1, height) * MUTATION_FACTOR)
 
-        # Draw image for individual
-        draw = ImageDraw.Draw(individual.img)
-        for x in range(begin_x, begin_x + size_x):
-            for y in range(begin_y, begin_y + size_y):
-                dna_char = individual.dna[y, x]
-                foreground = (dna_char.foreground + new_foreground)//2
-                background = (dna_char.background + new_background)//2
+    if begin_x + size_x > width:
+        size_x = width - begin_x
+    if begin_y + size_y > height:
+        size_y = height - begin_y
 
-                idx = (y - begin_y) * size_x + (x - begin_x)
-                individual.dna[y, x] = DnaChar(symbols[idx], foreground, background)
+    surface_size = size_x * size_y
 
-                draw_char(draw, x, y, individual.dna[y, x])
+    # Return symbols to char_base
+    available_chars = [ch * count for (ch, count) in individual.char_base.items()]
+    for x in range(begin_x, begin_x + size_x):
+        for y in range(begin_y, begin_y + size_y):
+            available_chars += individual.dna[y, x].symbol
+
+    # Choice random symbol, foreground and background color
+    symbols = random.choices("".join(available_chars), k=surface_size)
+    new_background = 0
+    new_foreground = 0
+    if mutate_fg_color:
+        new_foreground = random.randint(0, 255)
+
+    if mutate_bg_color:
+        new_background = random.randint(0, 255)
+
+    # Draw image for individual
+    draw = ImageDraw.Draw(individual.img)
+    for x in range(begin_x, begin_x + size_x):
+        for y in range(begin_y, begin_y + size_y):
+            dna_char = individual.dna[y, x]
+            foreground = (dna_char.foreground + new_foreground)//2
+            background = (dna_char.background + new_background)//2
+
+            idx = (y - begin_y) * size_x + (x - begin_x)
+            individual.dna[y, x] = DnaChar(symbols[idx], foreground, background)
+
+            draw_char(draw, x, y, individual.dna[y, x])
+
+    return individual
 
 
 def select(population, input_arr, edge_arr, score_fun):
@@ -260,25 +277,31 @@ def select(population, input_arr, edge_arr, score_fun):
     Score all individuals in population and choose BEST_NUM of them (from best
     to worst).
     """
-    scores = {}
-    for idx, individual in enumerate(population):
-        output_arr = np.array(individual.img)
-        result = score_fun(individual.dna, input_arr, edge_arr, output_arr)
-        scores[idx] = result
+    scores = []
+    for individual in population:
+        result = score_fun(individual, input_arr, edge_arr)
+        scores.append(result)
 
-    best_idx = sorted(scores, key=scores.get)[:BEST_NUM]
+    # input_arrs = itertools.repeat(input_arr, len(population))
+    # edge_arrs = itertools.repeat(edge_arr, len(population))
+    # with ThreadPoolExecutor() as executor:
+    #     scores = executor.map(score_fun, population, input_arrs, edge_arrs)
+    #     scores = list(scores)
+
+    best_idx = sorted(range(len(scores)), key=lambda k: scores[k])[:BEST_NUM]
 
     return best_idx, scores
 
 
-def score_pixels(dna, input_arr, edge_arr, output_arr):
+def score_pixels(individual, input_arr, edge_arr):
     """
     Score pixels differences between two images.
     """
+    output_arr = np.array(individual.img)
     return np.sum(np.subtract(input_arr, output_arr, dtype=np.int64)**2)
 
 
-def score_shape(dna, input_arr, edge_arr, output_arr):
+def score_shape(individual, input_arr, edge_arr):
     """
     Score characters shape differences between two different images (currently
     Hausdorff distance).
@@ -288,6 +311,8 @@ def score_shape(dna, input_arr, edge_arr, output_arr):
     https://answers.opencv.org/question/60974/matching-shapes-with-hausdorff-and-shape-context-distance/
     """
     PENALTY = 1000
+
+    output_arr = np.array(individual.img)
 
     hd = cv2.createHausdorffDistanceExtractor()
 
@@ -328,7 +353,7 @@ def score_shape(dna, input_arr, edge_arr, output_arr):
 
             # Calculate average color
             color = np.average(input_arr[begin_y:end_y, begin_x:end_x])
-            result += abs(color - dna[y, x].foreground)
+            result += abs(color - individual.dna[y, x].foreground)
 
     return result
 

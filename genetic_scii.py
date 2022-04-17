@@ -12,6 +12,8 @@ import time
 import copy
 import string
 import pickle
+from collections import namedtuple
+from typing import Counter
 from PIL import Image, ImageDraw, ImageFont
 import cv2
 import numpy as np
@@ -44,6 +46,9 @@ FONT_NAME = os.path.expanduser('~/.fonts/truetype/fixed-sys-excelsior/FSEX300.tt
 FONT_SIZE = 16
 FONT_SPACING = 0
 FONT = ImageFont.truetype(FONT_NAME, size=FONT_SIZE)
+
+
+Individual = namedtuple('Individual', ['dna', 'img', 'char_base'])
 
 
 def singe_char_shape():
@@ -89,13 +94,12 @@ def main():
     input_arr = get_input_array("sincity1.jpg")
     edge_arr = get_edge_array(input_arr)
     population = basic_population(input_arr.shape)
-    char_base = create_char_base(input_arr.shape, population[0][0])
 
     counter = 0
     for step in range(STEPS + 1):
         tic = time.time()
 
-        mutate(population, char_base, mutate_fg_color=True, mutate_bg_color=True)
+        mutate(population, mutate_fg_color=True, mutate_bg_color=True)
         best_idx, scores = select(population, input_arr, edge_arr, score_fun=score_shape)
         population = cross(population, best_idx)
 
@@ -111,6 +115,20 @@ def main():
     print("End")
 
 
+def create_char_base(dna):
+    """
+    Create char base.
+    """
+    char_base = Counter()
+    char_base.update(string.punctuation * 4)
+
+    current_num = len(char_base)
+    min_num = dna.shape[1] * dna.shape[0]
+    char_base.update(CHAR_BASE_SPACE * (min_num - current_num))
+
+    return char_base
+
+
 def basic_population(img_shape):
     """
     Create basic population - list of individuals. Each individual is
@@ -122,31 +140,17 @@ def basic_population(img_shape):
     img = Image.new("L", color=bk_color, size=(img_shape[1], img_shape[0]))
     dna = np.full(shape=(img_shape[0]//CHAR_SHAPE[0], img_shape[1]//CHAR_SHAPE[1]),
                   fill_value=DnaChar(background=bk_color))
-    population = [(np.copy(dna), copy.copy(img)) for _ in range(POPULATION_NUM)]
+    char_base = create_char_base(dna)
+
+    population = [Individual(np.copy(dna), copy.copy(img), copy.copy(char_base)) for _ in range(POPULATION_NUM)]
+
+    p = population[0]
+    print(f"Available chars: {len(char_base)}\n")
+    print(f"Input image resolution: {img_shape[1]}x{img_shape[0]}")
+    print(f"ASCII resolution: {p.dna.shape[1]}x{p.dna.shape[0]}")
+    print(f"Needed chars: {p.dna.shape[1] * p.dna.shape[0]}")
 
     return population
-
-
-def create_char_base(img_shape, dna):
-    """
-    Create char base.
-    """
-    print(f"Input image resolution: {img_shape[1]}x{img_shape[0]}")
-    print(f"ASCII resolution: {dna.shape[1]}x{dna.shape[0]}")
-    print(f"Needed chars: {dna.shape[1] * dna.shape[0]}")
-
-    # char_base = list(CHAR_BASE_PUNCT_BOX + CHAR_BASE_BLOCK)
-    char_base = []
-    char_base.extend("█" * 10)
-    char_base.extend("▄" * 15)
-
-    print(f"Available chars: {len(char_base)}\n")
-
-    current_num = len(char_base)
-    min_num = dna.shape[1] * dna.shape[0]
-    char_base.extend(CHAR_BASE_SPACE * (min_num - current_num))
-
-    return char_base
 
 
 def get_input_array(path):
@@ -187,22 +191,21 @@ def get_edge_array(gray_arr):
     return grad
 
 
-def mutate(population, char_base, mutate_fg_color=True, mutate_bg_color=True):
+def mutate(population, mutate_fg_color=True, mutate_bg_color=True):
     """
     Mutate - add random "rectangle" to each individual in population. Could be
     tuned by MUTATION_FACTOR.
     """
-    img = population[0][1]
-    width = img.size[0]//CHAR_SHAPE[1]
-    height = img.size[1]//CHAR_SHAPE[0]
+    width = population[0].img.size[0]//CHAR_SHAPE[1]
+    height = population[0].img.size[1]//CHAR_SHAPE[0]
 
-    for dna, img in population:
+    for individual in population:
         begin_x = random.randint(0, width - 1)
         begin_y = random.randint(0, height - 1)
         size_x = int(random.randint(1, width) * MUTATION_FACTOR)
         size_y = int(random.randint(1, height) * MUTATION_FACTOR)
 
-        symbol = random.choice(char_base)
+        symbol = random.choice(list(individual.char_base))
         new_background = 0
         new_foreground = 0
         if mutate_fg_color:
@@ -211,16 +214,16 @@ def mutate(population, char_base, mutate_fg_color=True, mutate_bg_color=True):
         if mutate_bg_color:
             new_background = random.randint(0, 255)
 
-        draw = ImageDraw.Draw(img)
+        draw = ImageDraw.Draw(individual.img)
 
         for x in range(begin_x, min(begin_x + size_x, width)):
             for y in range(begin_y, min(begin_y + size_y, height)):
-                dna_char = dna[y, x]
+                dna_char = individual.dna[y, x]
                 foreground = (dna_char.foreground + new_foreground)//2
                 background = (dna_char.background + new_background)//2
-                dna[y, x] = DnaChar(symbol, foreground, background)
+                individual.dna[y, x] = DnaChar(symbol, foreground, background)
 
-                draw_char(draw, x, y, dna[y, x])
+                draw_char(draw, x, y, individual.dna[y, x])
 
 
 def select(population, input_arr, edge_arr, score_fun):
@@ -229,9 +232,9 @@ def select(population, input_arr, edge_arr, score_fun):
     to worst).
     """
     scores = {}
-    for idx, (dna, img) in enumerate(population):
-        output_arr = np.array(img)
-        result = score_fun(dna, input_arr, edge_arr, output_arr)
+    for idx, individual in enumerate(population):
+        output_arr = np.array(individual.img)
+        result = score_fun(individual.dna, input_arr, edge_arr, output_arr)
         scores[idx] = result
 
     best_idx = sorted(scores, key=scores.get)[:BEST_NUM]
@@ -364,9 +367,10 @@ def cross(population, best_idx):
 
     result = []
     for _ in range(len(population)):
-        (dna1, img1), (dna2, img2) = random.sample(best_specimens, 2)
-        dna = np.copy(dna1)
-        img = copy.copy(img1)
+        individual1, individual2 = random.sample(best_specimens, 2)
+        dna = np.copy(individual1.dna)
+        img = copy.copy(individual1.img)
+        char_base = copy.copy(individual1.char_base)
 
         for _ in range(CROSS_NUM):
             y = np.random.randint(dna.shape[0] - 1)
@@ -374,11 +378,11 @@ def cross(population, best_idx):
             end_y = np.random.randint(y + 1, dna.shape[0])
             end_x = np.random.randint(x + 1, dna.shape[1])
 
-            dna[y:end_y, x:end_x] = dna2[y:end_y, x:end_x]
-            c = img2.crop(box=(x*CHAR_SHAPE[1], y*CHAR_SHAPE[0], end_x*CHAR_SHAPE[1], end_y*CHAR_SHAPE[0]))
+            dna[y:end_y, x:end_x] = individual2.dna[y:end_y, x:end_x]
+            c = individual2.img.crop(box=(x*CHAR_SHAPE[1], y*CHAR_SHAPE[0], end_x*CHAR_SHAPE[1], end_y*CHAR_SHAPE[0]))
             img.paste(c, box=(x*CHAR_SHAPE[1], y*CHAR_SHAPE[0]))
 
-        result.append((dna, img))
+        result.append(Individual(dna, img, char_base))
 
     return result
 
@@ -414,9 +418,9 @@ def save_dna_as_img(population, idx, step):
     """
     Save DNA as image.
     """
-    dna, img = population[idx]
-    img_shape = (img.size[1], img.size[0])
-    out_img = dna_to_img(dna, img_shape)
+    individual = population[idx]
+    img_shape = (individual.img.size[1], individual.img.size[0])
+    out_img = dna_to_img(individual.dna, img_shape)
     out_img.save("snapshot_%04d.png" % step)
 
     # Problem with Pillow not deterministic char shape calculation, so in worst

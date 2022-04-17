@@ -13,7 +13,7 @@ import copy
 import string
 import pickle
 from collections import namedtuple
-from typing import Counter
+from collections import Counter
 from PIL import Image, ImageDraw, ImageFont
 import cv2
 import numpy as np
@@ -200,12 +200,27 @@ def mutate(population, mutate_fg_color=True, mutate_bg_color=True):
     height = population[0].img.size[1]//CHAR_SHAPE[0]
 
     for individual in population:
+        # Randomize the location
         begin_x = random.randint(0, width - 1)
         begin_y = random.randint(0, height - 1)
         size_x = int(random.randint(1, width) * MUTATION_FACTOR)
         size_y = int(random.randint(1, height) * MUTATION_FACTOR)
 
-        symbol = random.choice(list(individual.char_base))
+        if begin_x + size_x > width:
+            size_x = width - begin_x
+        if begin_y + size_y > height:
+            size_y = height - begin_y
+
+        surface_size = size_x * size_y
+
+        # Return symbols to char_base
+        available_chars = [ch * count for (ch, count) in individual.char_base.items()]
+        for x in range(begin_x, begin_x + size_x):
+            for y in range(begin_y, begin_y + size_y):
+                available_chars += individual.dna[y, x].symbol
+
+        # Choice random symbol, foreground and background color
+        symbols = random.choices(''.join(available_chars), k=surface_size)
         new_background = 0
         new_foreground = 0
         if mutate_fg_color:
@@ -214,14 +229,16 @@ def mutate(population, mutate_fg_color=True, mutate_bg_color=True):
         if mutate_bg_color:
             new_background = random.randint(0, 255)
 
+        # Draw image for individual
         draw = ImageDraw.Draw(individual.img)
-
-        for x in range(begin_x, min(begin_x + size_x, width)):
-            for y in range(begin_y, min(begin_y + size_y, height)):
+        for x in range(begin_x, begin_x + size_x):
+            for y in range(begin_y, begin_y + size_y):
                 dna_char = individual.dna[y, x]
                 foreground = (dna_char.foreground + new_foreground)//2
                 background = (dna_char.background + new_background)//2
-                individual.dna[y, x] = DnaChar(symbol, foreground, background)
+
+                idx = (y - begin_y) * size_x + (x - begin_x)
+                individual.dna[y, x] = DnaChar(symbols[idx], foreground, background)
 
                 draw_char(draw, x, y, individual.dna[y, x])
 

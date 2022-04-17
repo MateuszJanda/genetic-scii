@@ -116,7 +116,7 @@ def main():
             save_dna_as_img(population, best_idx[0], counter)
             counter += 1
 
-        print("Generation: {step}, time: {t}, best: {best}, diff: {diff}"
+        print("Generation: {step}, time: {t:.12f}, best: {best}, diff: {diff}"
             .format(step=step, t=time.time() - tic, best=scores[best_idx[0]],
                 diff=scores[best_idx[-1]] - scores[best_idx[0]]))
 

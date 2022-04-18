@@ -202,8 +202,8 @@ def create_char_pool(dna):
     current_num = len(list(char_pool.elements()))
     print(f"Char in base: {current_num}")
 
-    min_num = dna.shape[1] * dna.shape[0]
-    char_pool.update(CHAR_POOL_SPACE * (min_num - current_num))
+    surface_size = dna.shape[1] * dna.shape[0]
+    char_pool.update(CHAR_POOL_SPACE * (surface_size - current_num))
 
     return char_pool
 
@@ -212,17 +212,18 @@ def create_color_pools(dna):
     """
     Create color palette.
     """
-    FACTOR = 2
+    FACTOR = 50
+    surface_size = dna.shape[1] * dna.shape[0]
 
-    fg_pool = Counter([color for color in range(128, 256)] * FACTOR)
+    fg_pool = Counter([color for color in range(0, 256, 16)] * FACTOR)
     fg_pool_num = len(list(fg_pool.elements()))
-    min_num = dna.shape[1] * dna.shape[0]
-    fg_pool.update([0] * (min_num - fg_pool_num))
+    # Set default foreground color
+    fg_pool.update([0] * (surface_size - fg_pool_num))
 
-    bg_pool = Counter([color for color in range(128, 256)] * FACTOR)
+    bg_pool = Counter([color for color in range(0, 256, 16)] * 25)
     bg_pool_num = len(list(bg_pool.elements()))
-    min_num = dna.shape[1] * dna.shape[0]
-    bg_pool.update([0] * (min_num - bg_pool_num))
+    # Set default background color
+    bg_pool.update([0] * (surface_size - bg_pool_num))
 
     return fg_pool, bg_pool
 

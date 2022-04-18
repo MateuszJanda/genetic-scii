@@ -267,29 +267,23 @@ def fff1(individual, mutate_fg_color=True, mutate_bg_color=True):
     for x in range(begin_x, begin_x + size_x):
         for y in range(begin_y, begin_y + size_y):
             individual.char_pool[individual.dna[y, x].symbol] += 1
+            individual.fg_pool[individual.dna[y, x].foreground] += 1
+            individual.bg_pool[individual.dna[y, x].background] += 1
 
     # Choice random symbol, foreground and background color
     new_symbols = random.choices(list(individual.char_pool.elements()), k=surface_size)
-
-    new_background = 0
-    new_foreground = 0
-    if mutate_fg_color:
-        new_foreground = random.randint(0, 255)
-
-    if mutate_bg_color:
-        new_background = random.randint(0, 255)
+    new_foreground = random.choices(list(individual.fg_pool.elements()), k=surface_size)
+    new_background = random.choices(list(individual.bg_pool.elements()), k=surface_size)
 
     # Draw image for individual
     draw = ImageDraw.Draw(individual.img)
     for x in range(begin_x, begin_x + size_x):
         for y in range(begin_y, begin_y + size_y):
-            dna_char = individual.dna[y, x]
-            foreground = (dna_char.foreground + new_foreground)//2
-            background = (dna_char.background + new_background)//2
-
             idx = (y - begin_y) * size_x + (x - begin_x)
-            individual.dna[y, x] = DnaChar(new_symbols[idx], foreground, background)
-            individual.char_pool.subtract(new_symbols[idx])
+            individual.dna[y, x] = DnaChar(new_symbols[idx], new_foreground[idx], new_background[idx])
+            individual.char_pool[new_symbols[idx]] -= 1
+            individual.fg_pool[new_foreground[idx]] -= 1
+            individual.bg_pool[new_background[idx]] -= 1
 
             draw_char(draw, x, y, individual.dna[y, x])
 
@@ -449,6 +443,8 @@ def cross(population, best_indices):
         dna = np.copy(individual1.dna)
         img = copy.copy(individual1.img)
         char_pool = copy.copy(individual1.char_pool)
+        fg_pool = copy.copy(individual1.fg_pool)
+        bg_pool = copy.copy(individual1.bg_pool)
 
         draw = ImageDraw.Draw(img)
         for _ in range(CROSS_NUM):
@@ -461,18 +457,29 @@ def cross(population, best_indices):
             for x in range(begin_x, end_x):
                 for y in range(begin_y, end_y):
                     # Return symbol to char pool
-                    char_pool.update(individual1.dna[y, x].symbol)
+                    char_pool[individual1.dna[y, x].symbol] += 1
+                    fg_pool[individual1.dna[y, x].foreground] += 1
+                    bg_pool[individual1.dna[y, x].background] += 1
 
                     # If char can't be copied choice avaliable one
                     dna_char = copy.copy(individual2.dna[y, x])
                     if char_pool[dna_char.symbol] <= 0:
                         dna_char.symbol = random.choice(list(char_pool.elements()))
-                    char_pool.subtract(dna_char.symbol)
+
+                    if fg_pool[dna_char.foreground] <= 0:
+                        dna_char.foreground = random.choice(list(fg_pool.elements()))
+
+                    if bg_pool[dna_char.background] <= 0:
+                        dna_char.background = random.choice(list(bg_pool.elements()))
+
+                    char_pool[dna_char.symbol] -= 1
+                    fg_pool[dna_char.foreground] -= 1
+                    bg_pool[dna_char.background] -= 1
                     dna[y, x] = dna_char
 
                     draw_char(draw, x, y, dna_char)
 
-        result.append(Individual(dna, img, char_pool, individual1.fg_pool, individual1.bg_pool))
+        result.append(Individual(dna, img, char_pool, fg_pool, bg_pool))
 
     return result
 

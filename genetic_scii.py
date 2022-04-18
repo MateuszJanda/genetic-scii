@@ -268,7 +268,11 @@ def fff1(individual, mutate_fg_color=True, mutate_bg_color=True):
             individual.char_base[individual.dna[y, x].symbol] += 1
 
     # Choice random symbol, foreground and background color
-    new_symbols = random.choices(list(individual.char_base.elements()), k=surface_size)
+    if len(list(individual.char_base.elements())) == 0:
+        new_symbols = CHAR_BASE_SPACE
+    else:
+        new_symbols = random.choices(list(individual.char_base.elements()), k=surface_size)
+
     new_background = 0
     new_foreground = 0
     if mutate_fg_color:
@@ -460,13 +464,12 @@ def cross(population, best_indices):
                 for y in range(begin_y, end_y):
                     dna_char = copy.copy(individual2.dna[y, x])
 
+                    # If no more chars in base the set default (space)
+                    if len(list(char_base.elements())) == 0:
+                        dna_char.symbol = CHAR_BASE_SPACE
                     # If char can't be copied choice avaliable one
-                    if char_base[dna_char.symbol] <= 1:
-                        if len(char_base) <= 0:
-                            print("\nERRRPR\n")
-                        print(len(list(char_base.elements())))
-                        a = random.choice(list(char_base.elements()))
-                        dna_char.symbol = a
+                    elif char_base[dna_char.symbol] <= 1:
+                        dna_char.symbol = random.choice(list(char_base.elements()))
 
                     char_base.subtract(dna_char.symbol)
                     dna[y, x] = dna_char

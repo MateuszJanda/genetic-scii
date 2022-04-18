@@ -181,8 +181,10 @@ def basic_population(img_shape):
     individual = population[0]
     print(f"Input image resolution: {img_shape[1]}x{img_shape[0]}")
     print(f"ASCII resolution: {individual.dna.shape[1]}x{individual.dna.shape[0]}")
+    print(f"Available foreground colors {len(fg_pool)}")
+    print(f"Available background colors {len(bg_pool)}")
     print(f"Needed chars: {individual.dna.shape[1] * individual.dna.shape[0]}")
-    print(f"Available chars: {len(''.join([ch * count for (ch, count) in char_pool.items()]))}\n")
+    print(f"Available chars: {len(''.join([ch * count for (ch, count) in char_pool.items()]))} + {individual.dna.shape[1] * individual.dna.shape[0]} (spaces)\n")
 
     return population
 
@@ -214,13 +216,11 @@ def create_color_pools(dna):
 
     fg_pool = Counter([color for color in range(128, 256)] * FACTOR)
     fg_pool_num = len(list(fg_pool.elements()))
-    print(f"Foregrounds colors in base: {fg_pool_num}")
     min_num = dna.shape[1] * dna.shape[0]
     fg_pool.update([0] * (min_num - fg_pool_num))
 
     bg_pool = Counter([color for color in range(128, 256)] * FACTOR)
     bg_pool_num = len(list(bg_pool.elements()))
-    print(f"Backgrounds colors in base: {bg_pool_num}")
     min_num = dna.shape[1] * dna.shape[0]
     bg_pool.update([0] * (min_num - bg_pool_num))
 

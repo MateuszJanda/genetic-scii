@@ -218,7 +218,7 @@ def create_color_pools(dna):
     fg_pool = Counter([color for color in range(0, 256, 16)] * FACTOR)
     fg_pool_num = len(list(fg_pool.elements()))
     # Set default foreground color
-    fg_pool.update([0] * (surface_size - fg_pool_num))
+    fg_pool.update([255] * (surface_size - fg_pool_num))
 
     bg_pool = Counter([color for color in range(0, 256, 16)] * 25)
     bg_pool_num = len(list(bg_pool.elements()))

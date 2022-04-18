@@ -471,7 +471,7 @@ def cross(population, best_indices):
 
                     draw_char(draw, x, y, dna_char)
 
-        result.append(Individual(dna, img, char_pool, individual1.fg_pool, individual1.background))
+        result.append(Individual(dna, img, char_pool, individual1.fg_pool, individual1.bg_pool))
 
     return result
 

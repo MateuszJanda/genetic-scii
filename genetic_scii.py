@@ -123,6 +123,70 @@ def main():
     print("End")
 
 
+def get_input_array(path):
+    """
+    Get input image (gray scale) as numpy array.
+
+    In ImageMagic this could look like this:
+    convert input.png  -fx 'intensity/8' output.png
+    """
+    gray_img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+
+    return gray_img
+
+
+def get_edge_array(gray_arr):
+    """
+    Get gray scale (numpy array) image of detected edges.
+
+    Reference:
+    https://docs.opencv.org/master/d2/d2c/tutorial_sobel_derivatives.html
+    """
+    scale = 1
+    delta = 0
+    ddepth = cv2.CV_16S
+
+    grad_x = cv2.Sobel(gray_arr, ddepth, 1, 0, ksize=3, scale=scale, delta=delta, borderType=cv2.BORDER_DEFAULT)
+    grad_y = cv2.Sobel(gray_arr, ddepth, 0, 1, ksize=3, scale=scale, delta=delta, borderType=cv2.BORDER_DEFAULT)
+
+    abs_grad_x = cv2.convertScaleAbs(grad_x)
+    abs_grad_y = cv2.convertScaleAbs(grad_y)
+
+    grad = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
+
+    THRESHOLD = 50
+    MAX_VALUE = 255
+    _, grad = cv2.threshold(grad, THRESHOLD, MAX_VALUE, cv2.THRESH_BINARY)
+
+    return grad
+
+
+def basic_population(img_shape):
+    """
+    Create basic population - list of individuals. Each individual is
+    represented as DNA and image (redundant because image can be generated from
+    DNA, but this operation is expensive). At the beginning each individual is
+    black image.
+    """
+    bk_color = BLACK
+    img = Image.new("L", color=bk_color, size=(img_shape[1], img_shape[0]))
+    dna = np.full(shape=(img_shape[0]//CHAR_SHAPE[0], img_shape[1]//CHAR_SHAPE[1]),
+                  fill_value=DnaChar(background=bk_color))
+    char_base = create_char_base(dna)
+    foregrounds, backgrounds = create_color_palette(dna)
+
+    population = [Individual(np.copy(dna), copy.copy(img), copy.copy(char_base), \
+        copy.copy(foregrounds), copy.copy(backgrounds)) for _ in range(POPULATION_NUM)]
+
+    individual = population[0]
+    print(f"Input image resolution: {img_shape[1]}x{img_shape[0]}")
+    print(f"ASCII resolution: {individual.dna.shape[1]}x{individual.dna.shape[0]}")
+    print(f"Needed chars: {individual.dna.shape[1] * individual.dna.shape[0]}")
+    print(f"Available chars: {len(''.join([ch * count for (ch, count) in char_base.items()]))}\n")
+
+    return population
+
+
 def create_char_base(dna):
     """
     Create char base.
@@ -163,70 +227,6 @@ def create_color_palette(dna):
     return foregrounds, backgrounds
 
 
-def basic_population(img_shape):
-    """
-    Create basic population - list of individuals. Each individual is
-    represented as DNA and image (redundant because image can be generated from
-    DNA, but this operation is expensive). At the beginning each individual is
-    black image.
-    """
-    bk_color = BLACK
-    img = Image.new("L", color=bk_color, size=(img_shape[1], img_shape[0]))
-    dna = np.full(shape=(img_shape[0]//CHAR_SHAPE[0], img_shape[1]//CHAR_SHAPE[1]),
-                  fill_value=DnaChar(background=bk_color))
-    char_base = create_char_base(dna)
-    foregrounds, backgrounds = create_color_palette(dna)
-
-    population = [Individual(np.copy(dna), copy.copy(img), copy.copy(char_base), \
-        copy.copy(foregrounds), copy.copy(backgrounds)) for _ in range(POPULATION_NUM)]
-
-    individual = population[0]
-    print(f"Input image resolution: {img_shape[1]}x{img_shape[0]}")
-    print(f"ASCII resolution: {individual.dna.shape[1]}x{individual.dna.shape[0]}")
-    print(f"Needed chars: {individual.dna.shape[1] * individual.dna.shape[0]}")
-    print(f"Available chars: {len(''.join([ch * count for (ch, count) in char_base.items()]))}\n")
-
-    return population
-
-
-def get_input_array(path):
-    """
-    Get input image (gray scale) as numpy array.
-
-    In ImageMagic this could look like this:
-    convert input.png  -fx 'intensity/8' output.png
-    """
-    gray_img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-
-    return gray_img
-
-
-def get_edge_array(gray_arr):
-    """
-    Get gray scale (numpy array) image of detected edges.
-
-    Reference:
-    https://docs.opencv.org/master/d2/d2c/tutorial_sobel_derivatives.html
-    """
-    scale = 1
-    delta = 0
-    ddepth = cv2.CV_16S
-
-    grad_x = cv2.Sobel(gray_arr, ddepth, 1, 0, ksize=3, scale=scale, delta=delta, borderType=cv2.BORDER_DEFAULT)
-    grad_y = cv2.Sobel(gray_arr, ddepth, 0, 1, ksize=3, scale=scale, delta=delta, borderType=cv2.BORDER_DEFAULT)
-
-    abs_grad_x = cv2.convertScaleAbs(grad_x)
-    abs_grad_y = cv2.convertScaleAbs(grad_y)
-
-    grad = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
-
-    THRESHOLD = 50
-    MAX_VALUE = 255
-    _, grad = cv2.threshold(grad, THRESHOLD, MAX_VALUE, cv2.THRESH_BINARY)
-
-    return grad
-
-
 def mutate(population, mutate_fg_color=True, mutate_bg_color=True):
     """
     Mutate - add random "rectangle" to each individual in population. Could be
@@ -265,7 +265,7 @@ def fff1(individual, mutate_fg_color=True, mutate_bg_color=True):
     # Return symbols to char_base
     for x in range(begin_x, begin_x + size_x):
         for y in range(begin_y, begin_y + size_y):
-            individual.char_base += individual.dna[y, x].symbol
+            individual.char_base[individual.dna[y, x].symbol] += 1
 
     # Choice random symbol, foreground and background color
     new_symbols = random.choices(list(individual.char_base.elements()), k=surface_size)
@@ -287,7 +287,7 @@ def fff1(individual, mutate_fg_color=True, mutate_bg_color=True):
 
             idx = (y - begin_y) * size_x + (x - begin_x)
             individual.dna[y, x] = DnaChar(new_symbols[idx], foreground, background)
-            individual.char_base.substrac(new_symbols[idx])
+            individual.char_base.subtract(new_symbols[idx])
 
             draw_char(draw, x, y, individual.dna[y, x])
 
@@ -448,17 +448,32 @@ def cross(population, best_indices):
         img = copy.copy(individual1.img)
         char_base = copy.copy(individual1.char_base)
 
+        draw = ImageDraw.Draw(img)
         for _ in range(CROSS_NUM):
-            y = np.random.randint(dna.shape[0] - 1)
-            x = np.random.randint(dna.shape[1] - 1)
-            end_y = np.random.randint(y + 1, dna.shape[0])
-            end_x = np.random.randint(x + 1, dna.shape[1])
+            begin_x = np.random.randint(dna.shape[1] - 1)
+            begin_y = np.random.randint(dna.shape[0] - 1)
+            end_x = np.random.randint(begin_x + 1, dna.shape[1])
+            end_y = np.random.randint(begin_y + 1, dna.shape[0])
 
-            dna[y:end_y, x:end_x] = individual2.dna[y:end_y, x:end_x]
-            cut = individual2.img.crop(box=(x*CHAR_SHAPE[1], y*CHAR_SHAPE[0], end_x*CHAR_SHAPE[1], end_y*CHAR_SHAPE[0]))
-            img.paste(cut, box=(x*CHAR_SHAPE[1], y*CHAR_SHAPE[0]))
+            # Copy characters from individual2 if possible
+            for x in range(begin_x, end_x):
+                for y in range(begin_y, end_y):
+                    dna_char = copy.copy(individual2.dna[y, x])
 
-        result.append(Individual(dna, img, individual1.char_base, individual1.foreground, individual1.background))
+                    # If char can't be copied choice avaliable one
+                    if char_base[dna_char.symbol] <= 1:
+                        if len(char_base) <= 0:
+                            print("\nERRRPR\n")
+                        print(len(list(char_base.elements())))
+                        a = random.choice(list(char_base.elements()))
+                        dna_char.symbol = a
+
+                    char_base.subtract(dna_char.symbol)
+                    dna[y, x] = dna_char
+
+                    draw_char(draw, x, y, dna_char)
+
+        result.append(Individual(dna, img, char_base, individual1.foreground, individual1.background))
 
     return result
 

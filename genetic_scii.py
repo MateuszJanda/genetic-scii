@@ -31,20 +31,20 @@ SNAPSHOT_STEP = 10
 
 
 # Different unicode chars sets used to generate final image
-CHAR_BASE_SPACE     = " "
-CHAR_BASE_ASCII     = string.digits + string.ascii_letters + string.punctuation
+CHAR_POOL_SPACE     = " "
+CHAR_POOL_ASCII     = string.digits + string.ascii_letters + string.punctuation
 
 # https://en.wikipedia.org/wiki/Box_Drawing_(Unicode_block)
-CHAR_BASE_BOX       = "".join([chr(ch) for ch in range(0x2500, 0x257F+1)])
+CHAR_POOL_BOX       = "".join([chr(ch) for ch in range(0x2500, 0x257F+1)])
 
 # https://en.wikipedia.org/wiki/Block_Elements
-CHAR_BASE_BLOCK     = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
+CHAR_POOL_BLOCK     = "".join([chr(ch) for ch in range(0x2580, 0x259F+1)])
 
 # https://en.wikipedia.org/wiki/Geometric_Shapes_(Unicode_block)
-CHAR_BASE_GEOMETRIC = "".join([chr(ch) for ch in range(0x25A0, 0x25FF+1)])
+CHAR_POOL_GEOMETRIC = "".join([chr(ch) for ch in range(0x25A0, 0x25FF+1)])
 
-CHAR_BASE_NOT_ALPHA = string.punctuation + CHAR_BASE_BOX + CHAR_BASE_BLOCK
-CHAR_BASE_PUNCT_BOX = string.punctuation + CHAR_BASE_BOX
+CHAR_POOL_NOT_ALPHA = string.punctuation + CHAR_POOL_BOX + CHAR_POOL_BLOCK
+CHAR_POOL_PUNCT_BOX = string.punctuation + CHAR_POOL_BOX
 
 # Image and font configuration
 BLACK = 0
@@ -57,7 +57,7 @@ FONT_SPACING = 0
 FONT = ImageFont.truetype(FONT_NAME, size=FONT_SIZE)
 
 
-Individual = namedtuple("Individual", ["dna", "img", "char_base", "foreground", "background"])
+Individual = namedtuple("Individual", ["dna", "img", "char_pool", "fg_pool", "bg_pool"])
 
 
 def singe_char_shape():
@@ -172,59 +172,59 @@ def basic_population(img_shape):
     img = Image.new("L", color=bk_color, size=(img_shape[1], img_shape[0]))
     dna = np.full(shape=(img_shape[0]//CHAR_SHAPE[0], img_shape[1]//CHAR_SHAPE[1]),
                   fill_value=DnaChar(background=bk_color))
-    char_base = create_char_base(dna)
-    foregrounds, backgrounds = create_color_palette(dna)
+    char_pool = create_char_pool(dna)
+    fg_pool, bg_pool = create_color_pools(dna)
 
-    population = [Individual(np.copy(dna), copy.copy(img), copy.copy(char_base), \
-        copy.copy(foregrounds), copy.copy(backgrounds)) for _ in range(POPULATION_NUM)]
+    population = [Individual(np.copy(dna), copy.copy(img), copy.copy(char_pool), \
+        copy.copy(fg_pool), copy.copy(bg_pool)) for _ in range(POPULATION_NUM)]
 
     individual = population[0]
     print(f"Input image resolution: {img_shape[1]}x{img_shape[0]}")
     print(f"ASCII resolution: {individual.dna.shape[1]}x{individual.dna.shape[0]}")
     print(f"Needed chars: {individual.dna.shape[1] * individual.dna.shape[0]}")
-    print(f"Available chars: {len(''.join([ch * count for (ch, count) in char_base.items()]))}\n")
+    print(f"Available chars: {len(''.join([ch * count for (ch, count) in char_pool.items()]))}\n")
 
     return population
 
 
-def create_char_base(dna):
+def create_char_pool(dna):
     """
-    Create char base.
+    Create char pool.
     """
     FACTOR = 2
-    char_base = Counter()
-    char_base.update(CHAR_BASE_BLOCK * FACTOR)
-    char_base.update(CHAR_BASE_BOX * FACTOR)
-    char_base.update(CHAR_BASE_GEOMETRIC * FACTOR)
+    char_pool = Counter()
+    char_pool.update(CHAR_POOL_BLOCK * FACTOR)
+    char_pool.update(CHAR_POOL_BOX * FACTOR)
+    char_pool.update(CHAR_POOL_GEOMETRIC * FACTOR)
 
-    current_num = len(list(char_base.elements()))
+    current_num = len(list(char_pool.elements()))
     print(f"Char in base: {current_num}")
 
     min_num = dna.shape[1] * dna.shape[0]
-    char_base.update(CHAR_BASE_SPACE * (min_num - current_num))
+    char_pool.update(CHAR_POOL_SPACE * (min_num - current_num))
 
-    return char_base
+    return char_pool
 
 
-def create_color_palette(dna):
+def create_color_pools(dna):
     """
     Create color palette.
     """
     FACTOR = 2
 
-    foregrounds = Counter([color for color in range(128, 256)] * FACTOR)
-    foregrounds_num = len(list(foregrounds.elements()))
-    print(f"Foregrounds colors in base: {foregrounds_num}")
+    fg_pool = Counter([color for color in range(128, 256)] * FACTOR)
+    fg_pool_num = len(list(fg_pool.elements()))
+    print(f"Foregrounds colors in base: {fg_pool_num}")
     min_num = dna.shape[1] * dna.shape[0]
-    foregrounds.update([0] * (min_num - foregrounds_num))
+    fg_pool.update([0] * (min_num - fg_pool_num))
 
-    backgrounds = Counter([color for color in range(128, 256)] * FACTOR)
-    backgrounds_num = len(list(backgrounds.elements()))
-    print(f"Backgrounds colors in base: {backgrounds_num}")
+    bg_pool = Counter([color for color in range(128, 256)] * FACTOR)
+    bg_pool_num = len(list(bg_pool.elements()))
+    print(f"Backgrounds colors in base: {bg_pool_num}")
     min_num = dna.shape[1] * dna.shape[0]
-    backgrounds.update([0] * (min_num - backgrounds_num))
+    bg_pool.update([0] * (min_num - bg_pool_num))
 
-    return foregrounds, backgrounds
+    return fg_pool, bg_pool
 
 
 def mutate(population, mutate_fg_color=True, mutate_bg_color=True):
@@ -262,13 +262,13 @@ def fff1(individual, mutate_fg_color=True, mutate_bg_color=True):
 
     surface_size = size_x * size_y
 
-    # Return symbols to char_base
+    # Return symbols to char_pool
     for x in range(begin_x, begin_x + size_x):
         for y in range(begin_y, begin_y + size_y):
-            individual.char_base[individual.dna[y, x].symbol] += 1
+            individual.char_pool[individual.dna[y, x].symbol] += 1
 
     # Choice random symbol, foreground and background color
-    new_symbols = random.choices(list(individual.char_base.elements()), k=surface_size)
+    new_symbols = random.choices(list(individual.char_pool.elements()), k=surface_size)
 
     new_background = 0
     new_foreground = 0
@@ -288,7 +288,7 @@ def fff1(individual, mutate_fg_color=True, mutate_bg_color=True):
 
             idx = (y - begin_y) * size_x + (x - begin_x)
             individual.dna[y, x] = DnaChar(new_symbols[idx], foreground, background)
-            individual.char_base.subtract(new_symbols[idx])
+            individual.char_pool.subtract(new_symbols[idx])
 
             draw_char(draw, x, y, individual.dna[y, x])
 
@@ -447,7 +447,7 @@ def cross(population, best_indices):
         individual1, individual2 = random.sample(best_individuals, 2)
         dna = np.copy(individual1.dna)
         img = copy.copy(individual1.img)
-        char_base = copy.copy(individual1.char_base)
+        char_pool = copy.copy(individual1.char_pool)
 
         draw = ImageDraw.Draw(img)
         for _ in range(CROSS_NUM):
@@ -459,19 +459,19 @@ def cross(population, best_indices):
             # Copy characters from individual2 if possible
             for x in range(begin_x, end_x):
                 for y in range(begin_y, end_y):
-                    # Return symbol to char base
-                    char_base.update(individual1.dna[y, x].symbol)
+                    # Return symbol to char pool
+                    char_pool.update(individual1.dna[y, x].symbol)
 
                     # If char can't be copied choice avaliable one
                     dna_char = copy.copy(individual2.dna[y, x])
-                    if char_base[dna_char.symbol] <= 0:
-                        dna_char.symbol = random.choice(list(char_base.elements()))
-                    char_base.subtract(dna_char.symbol)
+                    if char_pool[dna_char.symbol] <= 0:
+                        dna_char.symbol = random.choice(list(char_pool.elements()))
+                    char_pool.subtract(dna_char.symbol)
                     dna[y, x] = dna_char
 
                     draw_char(draw, x, y, dna_char)
 
-        result.append(Individual(dna, img, char_base, individual1.foreground, individual1.background))
+        result.append(Individual(dna, img, char_pool, individual1.fg_pool, individual1.background))
 
     return result
 
@@ -526,20 +526,20 @@ def dna_to_img(dna, img_shape):
     draw = ImageDraw.Draw(img)
 
     for y, line in enumerate(dna):
-        for x, char in enumerate(line):
-            draw_char(draw, x, y, char)
+        for x, dna_char in enumerate(line):
+            draw_char(draw, x, y, dna_char)
 
     return img
 
 
-def draw_char(draw, x, y, char):
+def draw_char(draw, x, y, dna_char):
     """
     Draw character on the image.
     """
     pos_x, pos_y = x*CHAR_SHAPE[1], y*CHAR_SHAPE[0]
     # Borders are part of rectangle so we must subtract 1 from bottom and right
-    draw.rectangle(xy=[(pos_x, pos_y), (pos_x + CHAR_SHAPE[1] - 1, pos_y + CHAR_SHAPE[0] - 1)], fill=char.background)
-    draw.text(xy=(pos_x, pos_y), text=char.symbol, fill=char.foreground, font=FONT, spacing=FONT_SPACING)
+    draw.rectangle(xy=[(pos_x, pos_y), (pos_x + CHAR_SHAPE[1] - 1, pos_y + CHAR_SHAPE[0] - 1)], fill=dna_char.background)
+    draw.text(xy=(pos_x, pos_y), text=dna_char.symbol, fill=dna_char.foreground, font=FONT, spacing=FONT_SPACING)
 
 
 if __name__ == "__main__":

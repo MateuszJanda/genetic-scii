@@ -8,6 +8,7 @@ Ad maiorem Dei gloriam
 
 import os
 import random
+import argparse
 import time
 import copy
 import string
@@ -86,6 +87,10 @@ class DnaChar:
         self.background = background
 
 
+class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
+    pass
+
+
 def main():
     """
     Three steps of genetic algorithm:
@@ -95,11 +100,16 @@ def main():
 
     Tested on image with resoultion: 371x480
     """
+    parser = argparse.ArgumentParser(description="Genetic ASCII generator.",
+        formatter_class=CustomFormatter)
+    parser.add_argument("path", help="Path to image.")
+    args = parser.parse_args()
+
     seed = 1337
     random.seed(seed)
     np.random.seed(seed)
 
-    input_arr = get_input_array("sincity1.jpg")
+    input_arr = get_input_array(args.path)
     edge_arr = get_edge_array(input_arr)
     population = basic_population(input_arr.shape)
 
@@ -181,10 +191,10 @@ def basic_population(img_shape):
     individual = population[0]
     print(f"Input image resolution: {img_shape[1]}x{img_shape[0]}")
     print(f"ASCII resolution: {individual.dna.shape[1]}x{individual.dna.shape[0]}")
-    print(f"Available foreground colors {len(fg_pool)}")
-    print(f"Available background colors {len(bg_pool)}")
+    print(f"Available foreground colors: {len(fg_pool)}")
+    print(f"Available background colors: {len(bg_pool)}")
     print(f"Needed chars: {individual.dna.shape[1] * individual.dna.shape[0]}")
-    print(f"Available chars: {len(''.join([ch * count for (ch, count) in char_pool.items()]))} + {individual.dna.shape[1] * individual.dna.shape[0]} (spaces)\n")
+    print(f"Available chars: {len(list(char_pool.elements()))} + {individual.dna.shape[1] * individual.dna.shape[0]} (spaces)\n")
 
     return population
 
@@ -200,7 +210,7 @@ def create_char_pool(dna):
     char_pool.update(CHAR_POOL_GEOMETRIC * FACTOR)
 
     current_num = len(list(char_pool.elements()))
-    print(f"Char in base: {current_num}")
+    print(f"Char in pool: {current_num}")
 
     surface_size = dna.shape[1] * dna.shape[0]
     char_pool.update(CHAR_POOL_SPACE * (surface_size - current_num))

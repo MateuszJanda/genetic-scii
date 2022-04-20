@@ -209,7 +209,7 @@ def create_char_pool(dna):
     char_pool.update(CHAR_POOL_GEOMETRIC * FACTOR)
 
     current_num = len(list(char_pool.elements()))
-    print(f"Chars in pool: {current_num}")
+    print(f"Pure chars in pool: {current_num}")
 
     surface_size = dna.shape[1] * dna.shape[0]
     # Include spaces in empty (init) image

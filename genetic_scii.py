@@ -81,7 +81,7 @@ class DnaChar:
     Single char property (symbol, foreground and background). DNA is array
     Chars.
     """
-    def __init__(self, symbol=" ", foreground=WHITE, background=BLACK):
+    def __init__(self, symbol=CHAR_POOL_SPACE, foreground=WHITE, background=BLACK):
         self.symbol = symbol
         self.foreground = foreground
         self.background = background
@@ -178,10 +178,9 @@ def basic_population(img_shape):
     DNA, but this operation is expensive). At the beginning each individual is
     black image.
     """
-    bk_color = BLACK
-    img = Image.new("L", color=bk_color, size=(img_shape[1], img_shape[0]))
+    img = Image.new("L", color=BLACK, size=(img_shape[1], img_shape[0]))
     dna = np.full(shape=(img_shape[0]//CHAR_SHAPE[0], img_shape[1]//CHAR_SHAPE[1]),
-                  fill_value=DnaChar(background=bk_color))
+                  fill_value=DnaChar(background=BLACK))
     char_pool = create_char_pool(dna)
     fg_pool, bg_pool = create_color_pools(dna)
 
@@ -194,7 +193,7 @@ def basic_population(img_shape):
     print(f"Available foreground colors: {len(fg_pool)}")
     print(f"Available background colors: {len(bg_pool)}")
     print(f"Needed chars: {individual.dna.shape[1] * individual.dna.shape[0]}")
-    print(f"Available chars: {len(list(char_pool.elements()))} + {individual.dna.shape[1] * individual.dna.shape[0]} (spaces)\n")
+    print(f"Available chars: {len(list(char_pool.elements()))}\n")
 
     return population
 
@@ -210,10 +209,13 @@ def create_char_pool(dna):
     char_pool.update(CHAR_POOL_GEOMETRIC * FACTOR)
 
     current_num = len(list(char_pool.elements()))
-    print(f"Char in pool: {current_num}")
+    print(f"Chars in pool: {current_num}")
 
     surface_size = dna.shape[1] * dna.shape[0]
-    char_pool.update(CHAR_POOL_SPACE * (surface_size - current_num))
+    # Remove spaces in empty (init) image
+    char_pool[CHAR_POOL_SPACE] = -surface_size
+    # If there is not enough chars fill with spaces
+    char_pool[CHAR_POOL_SPACE] += max(0, surface_size - current_num)
 
     return char_pool
 

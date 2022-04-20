@@ -190,8 +190,8 @@ def basic_population(img_shape):
     individual = population[0]
     print(f"Input image resolution: {img_shape[1]}x{img_shape[0]}")
     print(f"ASCII resolution: {individual.dna.shape[1]}x{individual.dna.shape[0]}")
-    print(f"Available foreground colors: {len(fg_pool)}")
-    print(f"Available background colors: {len(bg_pool)}")
+    print(f"Available foreground colors: {len(list(fg_pool.elements()))}")
+    print(f"Available background colors: {len(list(bg_pool.elements()))}")
     print(f"Needed chars: {individual.dna.shape[1] * individual.dna.shape[0]}")
     print(f"Available chars: {len(list(char_pool.elements()))}\n")
 

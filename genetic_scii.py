@@ -203,16 +203,17 @@ def create_char_pool(dna):
     """
     Create char pool.
     """
-    FACTOR = 2
+    surface_size = dna.shape[1] * dna.shape[0]
+    factor = int(surface_size/676)
+
     char_pool = Counter()
-    char_pool.update(CHAR_POOL_BLOCK * FACTOR)
-    char_pool.update(CHAR_POOL_BOX * FACTOR)
-    char_pool.update(CHAR_POOL_GEOMETRIC * FACTOR)
+    char_pool.update(CHAR_POOL_BLOCK * factor)
+    char_pool.update(CHAR_POOL_BOX * factor)
+    char_pool.update(CHAR_POOL_GEOMETRIC * factor)
 
     current_num = len(list(char_pool.elements()))
     print(f"Pure chars in pool: {current_num}")
 
-    surface_size = dna.shape[1] * dna.shape[0]
     # Include spaces in empty (init) image
     char_pool[CHAR_POOL_SPACE] -= surface_size
     # If there is not enough chars fill with spaces
@@ -225,17 +226,16 @@ def create_color_pools(dna):
     """
     Create color palette.
     """
-    FACTOR = 50
     surface_size = dna.shape[1] * dna.shape[0]
 
-    fg_pool = Counter([color for color in range(0, 256, 16)] * FACTOR)
+    fg_pool = Counter([color for color in range(0, 256, 16)] * int(surface_size/27))
     fg_pool_num = len(list(fg_pool.elements()))
     # Include white foreground in empty (init) image
     fg_pool[WHITE] -= surface_size
     # If there is not enough foreground colors fill with white
     fg_pool[WHITE] += max(0, surface_size - fg_pool_num)
 
-    bg_pool = Counter([color for color in range(0, 256, 16)] * 25)
+    bg_pool = Counter([color for color in range(0, 256, 16)] * int(surface_size/54))
     bg_pool_num = len(list(bg_pool.elements()))
     # Include black background in empty (init) image
     bg_pool[BLACK] -= surface_size

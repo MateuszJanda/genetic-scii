@@ -207,7 +207,7 @@ def create_char_pool(dna):
     factor = int(surface_size/676)
 
     char_pool = Counter()
-    char_pool.update(CHAR_POOL_BLOCK * factor)
+    char_pool.update(CHAR_POOL_BLOCK * (factor + 1))
     char_pool.update(CHAR_POOL_BOX * factor)
     char_pool.update(CHAR_POOL_ASCII * factor)
 
@@ -231,7 +231,7 @@ def create_color_pools(dna):
     """
     surface_size = dna.shape[1] * dna.shape[0]
 
-    fg_pool = Counter([color for color in range(8, 256, 16)] * int(surface_size/27))
+    fg_pool = Counter([color for color in range(8, 256, 16)] * int(surface_size/18))
     fg_pool_num = len(list(fg_pool.elements()))
     # Include white foreground in empty (init) image
     fg_pool[WHITE] -= surface_size
@@ -239,7 +239,7 @@ def create_color_pools(dna):
     fg_pool[WHITE] += max(0, surface_size - fg_pool_num)
 
     # Extra white foreground
-    fg_pool[WHITE] += 300
+    fg_pool[WHITE] += 500
 
     bg_pool = Counter([color for color in range(0, 256, 16)] * int(surface_size/54))
     bg_pool_num = len(list(bg_pool.elements()))
@@ -249,6 +249,7 @@ def create_color_pools(dna):
     bg_pool[BLACK] += max(0, surface_size - bg_pool_num)
 
     # Extra white foreground
+    bg_pool[WHITE] += 200
     bg_pool[BLACK] += 300
 
     return fg_pool, bg_pool

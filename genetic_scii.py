@@ -26,7 +26,7 @@ POPULATION_NUM = 100
 BEST_NUM = 3
 MUTATION_FACTOR = 1/8
 CROSS_NUM = 2
-SNAPSHOT_STEP = 10
+SNAPSHOT_STEP = 5
 
 
 # Different unicode chars sets used to generate final image
@@ -190,9 +190,9 @@ def basic_population(img_shape):
     surface_size = individual.dna.shape[1] * individual.dna.shape[0]
     print(f"ASCII resolution: {individual.dna.shape[1]}x{individual.dna.shape[0]}")
     print(f"Needed chars: {surface_size}")
-    print(f"Available chars: {surface_size + sum([count for _, count in char_pool.items()])}\n")
+    print(f"Available chars: {surface_size + sum([count for _, count in char_pool.items()])}")
     print(f"Available foreground colors: {surface_size + sum([count for _, count in fg_pool.items()])}")
-    print(f"Available background colors: {surface_size + sum([count for _, count in bg_pool.items()])}")
+    print(f"Available background colors: {surface_size + sum([count for _, count in bg_pool.items()])}\n")
 
     return population
 

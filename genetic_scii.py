@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-Author: Mateusz Janda <mateusz janda at gmail com>
-Site: github.com/MateuszJanda
+Author: Mateusz Janda (c) <mateusz janda at gmail com>
+Site: https://github.com/MateuszJanda/genetic-scii
 Ad maiorem Dei gloriam
 """
 
@@ -100,7 +100,7 @@ def main():
     """
     parser = argparse.ArgumentParser(description="Genetic ASCII (glitch) generator.\n\n"
             "Mateusz Janda (c) <mateusz janda at gmail com>\n"
-            "genetic-scii project github.com/MateuszJanda/genetic-scii\n",
+            "https://github.com/MateuszJanda/genetic-scii\n",
         formatter_class=CustomFormatter)
     parser.add_argument("path", help="Path to image.")
     args = parser.parse_args()

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Author: Mateusz Janda (c) <mateusz janda at gmail com>
+# Site: https://github.com/MateuszJanda/genetic-scii
+
 if [[ -z $1 ]]; then
     echo "Warning - missing original file name."
     echo "Usage:"

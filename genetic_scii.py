@@ -222,7 +222,6 @@ def create_char_pool(dna):
     # Extra characters
     char_pool.update(string.punctuation * 2)
 
-
     return char_pool
 
 

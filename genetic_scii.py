@@ -13,12 +13,10 @@ import time
 import copy
 import string
 import pickle
-import itertools
 from collections import namedtuple
 from collections import Counter
 from PIL import Image, ImageDraw, ImageFont
 import cv2
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 import numpy as np
 
 
@@ -117,7 +115,7 @@ def main():
     for step in range(STEPS + 1):
         tic = time.time()
 
-        mutate(population, mutate_fg_color=True, mutate_bg_color=True)
+        population = mutate(population)
         best_indices, scores = select(population, input_arr, edge_arr, score_fun=score_pixels)
         population = cross(population, best_indices)
 
@@ -245,66 +243,57 @@ def create_color_pools(dna):
     return fg_pool, bg_pool
 
 
-def mutate(population, mutate_fg_color=True, mutate_bg_color=True):
+def mutate(population):
     """
     Mutate - add random "rectangle" to each individual in population. Could be
     tuned by MUTATION_FACTOR.
     """
+    new_population = []
 
-    out = []
-
-    # with ProcessPoolExecutor() as executor:
-    # with ThreadPoolExecutor() as executor:
     for individual in population:
-        out.append(fff1(individual))
-        # out = executor.map(fff1, population)
+        width = individual.img.size[0]//CHAR_SHAPE[1]
+        height = individual.img.size[1]//CHAR_SHAPE[0]
 
-    population = out
+        # Randomize the location
+        begin_x = random.randint(0, width - 1)
+        begin_y = random.randint(0, height - 1)
+        size_x = int(random.randint(1, width) * MUTATION_FACTOR)
+        size_y = int(random.randint(1, height) * MUTATION_FACTOR)
 
+        if begin_x + size_x > width:
+            size_x = width - begin_x
+        if begin_y + size_y > height:
+            size_y = height - begin_y
 
+        surface_size = size_x * size_y
 
-def fff1(individual, mutate_fg_color=True, mutate_bg_color=True):
-    width = individual.img.size[0]//CHAR_SHAPE[1]
-    height = individual.img.size[1]//CHAR_SHAPE[0]
+        # Return symbols to char_pool
+        for x in range(begin_x, begin_x + size_x):
+            for y in range(begin_y, begin_y + size_y):
+                individual.char_pool[individual.dna[y, x].symbol] += 1
+                individual.fg_pool[individual.dna[y, x].foreground] += 1
+                individual.bg_pool[individual.dna[y, x].background] += 1
 
-    # Randomize the location
-    begin_x = random.randint(0, width - 1)
-    begin_y = random.randint(0, height - 1)
-    size_x = int(random.randint(1, width) * MUTATION_FACTOR)
-    size_y = int(random.randint(1, height) * MUTATION_FACTOR)
+        # Choice random symbol, foreground and background color
+        new_symbols = random.choices(list(individual.char_pool.elements()), k=surface_size)
+        new_foreground = random.choices(list(individual.fg_pool.elements()), k=surface_size)
+        new_background = random.choices(list(individual.bg_pool.elements()), k=surface_size)
 
-    if begin_x + size_x > width:
-        size_x = width - begin_x
-    if begin_y + size_y > height:
-        size_y = height - begin_y
+        # Draw image for individual
+        draw = ImageDraw.Draw(individual.img)
+        for x in range(begin_x, begin_x + size_x):
+            for y in range(begin_y, begin_y + size_y):
+                idx = (y - begin_y) * size_x + (x - begin_x)
+                individual.dna[y, x] = DnaChar(new_symbols[idx], new_foreground[idx], new_background[idx])
+                individual.char_pool[new_symbols[idx]] -= 1
+                individual.fg_pool[new_foreground[idx]] -= 1
+                individual.bg_pool[new_background[idx]] -= 1
 
-    surface_size = size_x * size_y
+                draw_char(draw, x, y, individual.dna[y, x])
 
-    # Return symbols to char_pool
-    for x in range(begin_x, begin_x + size_x):
-        for y in range(begin_y, begin_y + size_y):
-            individual.char_pool[individual.dna[y, x].symbol] += 1
-            individual.fg_pool[individual.dna[y, x].foreground] += 1
-            individual.bg_pool[individual.dna[y, x].background] += 1
+        new_population.append(individual)
 
-    # Choice random symbol, foreground and background color
-    new_symbols = random.choices(list(individual.char_pool.elements()), k=surface_size)
-    new_foreground = random.choices(list(individual.fg_pool.elements()), k=surface_size)
-    new_background = random.choices(list(individual.bg_pool.elements()), k=surface_size)
-
-    # Draw image for individual
-    draw = ImageDraw.Draw(individual.img)
-    for x in range(begin_x, begin_x + size_x):
-        for y in range(begin_y, begin_y + size_y):
-            idx = (y - begin_y) * size_x + (x - begin_x)
-            individual.dna[y, x] = DnaChar(new_symbols[idx], new_foreground[idx], new_background[idx])
-            individual.char_pool[new_symbols[idx]] -= 1
-            individual.fg_pool[new_foreground[idx]] -= 1
-            individual.bg_pool[new_background[idx]] -= 1
-
-            draw_char(draw, x, y, individual.dna[y, x])
-
-    return individual
+    return new_population
 
 
 def select(population, input_arr, edge_arr, score_fun):

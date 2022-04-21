@@ -308,12 +308,6 @@ def select(population, input_arr, edge_arr, score_fun):
         result = score_fun(individual, input_arr, edge_arr)
         scores.append(result)
 
-    # input_arrs = itertools.repeat(input_arr, len(population))
-    # edge_arrs = itertools.repeat(edge_arr, len(population))
-    # with ThreadPoolExecutor() as executor:
-    #     scores = executor.map(score_fun, population, input_arrs, edge_arrs)
-    #     scores = list(scores)
-
     best_indices = sorted(range(len(scores)), key=lambda k: scores[k])[:BEST_NUM]
 
     return best_indices, scores

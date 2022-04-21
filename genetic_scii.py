@@ -21,12 +21,12 @@ import numpy as np
 
 
 # Evolution parameters
-STEPS = 800
+STEPS = 1000
 POPULATION_NUM = 100
 BEST_NUM = 3
 MUTATION_FACTOR = 1/8
 CROSS_NUM = 2
-SNAPSHOT_STEP = 5
+SNAPSHOT_STEP = 10
 
 
 # Different unicode chars sets used to generate final image
@@ -209,7 +209,7 @@ def create_char_pool(dna):
     char_pool = Counter()
     char_pool.update(CHAR_POOL_BLOCK * factor)
     char_pool.update(CHAR_POOL_BOX * factor)
-    char_pool.update(CHAR_POOL_GEOMETRIC * factor)
+    char_pool.update(CHAR_POOL_ASCII * factor)
 
     current_num = len(list(char_pool.elements()))
     print(f"Pure chars in pool: {current_num}")
@@ -218,6 +218,10 @@ def create_char_pool(dna):
     char_pool[CHAR_POOL_SPACE] -= surface_size
     # If there is not enough chars fill with spaces
     char_pool[CHAR_POOL_SPACE] += max(0, surface_size - current_num)
+
+    # Extra characters
+    char_pool.update(string.punctuation * 2)
+
 
     return char_pool
 
@@ -228,12 +232,15 @@ def create_color_pools(dna):
     """
     surface_size = dna.shape[1] * dna.shape[0]
 
-    fg_pool = Counter([color for color in range(0, 256, 16)] * int(surface_size/27))
+    fg_pool = Counter([color for color in range(8, 256, 16)] * int(surface_size/27))
     fg_pool_num = len(list(fg_pool.elements()))
     # Include white foreground in empty (init) image
     fg_pool[WHITE] -= surface_size
     # If there is not enough foreground colors fill with white
     fg_pool[WHITE] += max(0, surface_size - fg_pool_num)
+
+    # Extra white foreground
+    fg_pool[WHITE] += 300
 
     bg_pool = Counter([color for color in range(0, 256, 16)] * int(surface_size/54))
     bg_pool_num = len(list(bg_pool.elements()))
@@ -241,6 +248,9 @@ def create_color_pools(dna):
     bg_pool[BLACK] -= surface_size
     # If there is not enough background colors fill with black
     bg_pool[BLACK] += max(0, surface_size - bg_pool_num)
+
+    # Extra white foreground
+    bg_pool[BLACK] += 300
 
     return fg_pool, bg_pool
 

@@ -9,7 +9,7 @@ if [[ -z $1 ]]; then
     echo "   ./gif_maker.sh input.png"
 else
     SCALE="416x416"
-    echo "BE AWARE! Current resolution" $SCALE
+    echo "Be aware! Current scale:" $SCALE
     echo ""
 
     # Shrink original image
@@ -49,6 +49,7 @@ else
     ffmpeg -v warning -i $VIDEO_FILE -i $PALETTE_FILE -lavfi "$FILTERS [x]; [x][1:v] paletteuse" -y $OUTPUT_GIF
 
     echo ""
+    echo "End"
     echo "Check:" $VIDEO_FILE
     echo "Check:" $OUTPUT_GIF
 fi

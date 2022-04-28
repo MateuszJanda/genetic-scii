@@ -102,14 +102,14 @@ def main():
             "Mateusz Janda (c) <mateusz janda at gmail com>\n"
             "https://github.com/MateuszJanda/genetic-scii\n",
         formatter_class=CustomFormatter)
-    parser.add_argument("path", help="Path to image.")
+    parser.add_argument("file", help="Path to image.")
     args = parser.parse_args()
 
     seed = 1337
     random.seed(seed)
     np.random.seed(seed)
 
-    input_arr = get_input_array(args.path)
+    input_arr = get_input_array(args.file)
     edge_arr = get_edge_array(input_arr)
     population = basic_population(input_arr.shape)
 
@@ -125,9 +125,8 @@ def main():
             save_dna_as_img(population, best_indices[0], counter)
             counter += 1
 
-        print("Generation: {step}, time: {t:.12f}, best: {best}, diff: {diff}"
-            .format(step=step, t=time.time() - tic, best=scores[best_indices[0]],
-                diff=scores[best_indices[-1]] - scores[best_indices[0]]))
+        print(f"Generation: {step}, time: {time.time() - tic:.12f}, best: {scores[best_indices[0]]}"
+              f", diff: {scores[best_indices[-1]] - scores[best_indices[0]]}")
 
     save_dna_as_img(population, best_indices[0], counter)
     print("End")
@@ -207,7 +206,7 @@ def create_char_pool(dna):
     factor = int(surface_size/676)
 
     char_pool = Counter()
-    char_pool.update(CHAR_POOL_BLOCK * (factor + 1))
+    char_pool.update(CHAR_POOL_BLOCK * (factor + 2))
     char_pool.update(CHAR_POOL_BOX * factor)
     char_pool.update(CHAR_POOL_ASCII * factor)
 
@@ -232,6 +231,9 @@ def create_color_pools(dna):
     surface_size = dna.shape[1] * dna.shape[0]
 
     fg_pool = Counter([color for color in range(8, 256, 16)] * int(surface_size/9))
+    for color in list(range(128 + 8, 256, 16)) * 3:
+        fg_pool[color] += 1
+
     fg_pool_num = len(list(fg_pool.elements()))
     # Include white foreground in empty (init) image
     fg_pool[WHITE] -= surface_size
@@ -242,6 +244,9 @@ def create_color_pools(dna):
     fg_pool[WHITE] += 500
 
     bg_pool = Counter([color for color in range(0, 256, 16)] * int(surface_size/54))
+    for color in list(range(128, 256, 16)) * 3:
+        bg_pool[color] += 1
+
     bg_pool_num = len(list(bg_pool.elements()))
     # Include black background in empty (init) image
     bg_pool[BLACK] -= surface_size
@@ -249,7 +254,7 @@ def create_color_pools(dna):
     bg_pool[BLACK] += max(0, surface_size - bg_pool_num)
 
     # Extra white foreground
-    bg_pool[WHITE] += 100
+    bg_pool[WHITE] += 300
     bg_pool[BLACK] += 100
 
     return fg_pool, bg_pool

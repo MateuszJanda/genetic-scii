@@ -206,9 +206,9 @@ def create_char_pool(dna):
     factor = int(surface_size/676)
 
     char_pool = Counter()
-    char_pool.update(CHAR_POOL_BLOCK * (factor + 2))
-    char_pool.update(CHAR_POOL_BOX * factor)
-    char_pool.update(CHAR_POOL_ASCII * factor)
+    char_pool.update(CHAR_POOL_BLOCK * factor)
+    char_pool.update(CHAR_POOL_BOX * (factor + 2))
+    char_pool.update(CHAR_POOL_ASCII * (factor + 3))
 
     current_num = len(list(char_pool.elements()))
     print(f"Pure chars in pool: {current_num}")

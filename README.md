@@ -12,6 +12,11 @@ Generate ASCII/Unicode image with three setp [genetic algorithm](https://en.wiki
     <p style="text-align:center">Input image by <a href="https://commons.wikimedia.org/wiki/File:The-punisher-logo-png-transparent.png">keyword</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>, via Wikimedia Commons</p>
 </p>
 
+## Useful links:
+
+- [Genetic Programming: Evolution of Mona Lisa](https://rogerjohansson.blog/2008/12/07/genetic-programming-evolution-of-mona-lisa/)
+- [Gynvael's Livestream #28: Mona Lisa genetycznie](https://www.youtube.com/watch?v=7zI7M_5_jBE)
+
 ## Requirements
 
 ```bash

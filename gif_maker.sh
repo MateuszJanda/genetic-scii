@@ -8,7 +8,7 @@ if [[ -z $1 ]]; then
     echo "Usage:"
     echo "   ./gif_maker.sh input.png"
 else
-    SCALE="416x416"
+    SCALE="360x360"
     echo "Be aware! Current scale:" $SCALE
     echo ""
 

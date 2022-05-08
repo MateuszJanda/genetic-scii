@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-"""
-Author: Mateusz Janda (c) <mateusz janda at gmail com>
-Site: https://github.com/MateuszJanda/genetic-scii
-Ad maiorem Dei gloriam
-"""
+# Author: Mateusz Janda (c) <mateusz janda at gmail com>
+# Site: https://github.com/MateuszJanda/genetic-scii
+# Ad maiorem Dei gloriam
+
 
 import os
 import random

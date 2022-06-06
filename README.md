@@ -1,6 +1,6 @@
 # geneti-scii
 
-ASCII/Unicode image generator with three setp [genetic algorithm](https://en.wikipedia.org/wiki/Genetic_algorithm).
+ASCII/Unicode image generator with three step [genetic algorithm](https://en.wikipedia.org/wiki/Genetic_algorithm).
 
 <p align="center">
     <img src="./gallery/gen_pirate.gif"/>
